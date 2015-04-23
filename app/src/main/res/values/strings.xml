@@ -2,4 +2,7 @@
     <string name="app_name">Intercom</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="btnGo">Поехали</string>
+    <string name="btnGoError">Ошибка</string>
+    <string name="btnGoIdle">Подождите</string>
 </resources>

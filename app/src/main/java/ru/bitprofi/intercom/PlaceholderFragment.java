@@ -8,17 +8,13 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.dd.CircularProgressButton;
+
 /**
  * A placeholder fragment containing a simple view.
  */
 public class PlaceholderFragment extends Fragment {
-    private Button _btnBluetoothOnOff;//Включить/Выключить Bluetooth
-    private Button _btnDeviceConnect; //Подсоединиться к устройству
-    private Button _btnSearchDevices; //Поиск устройств
-
-    private TextView _tvBluetoothStatus;     //Просто текст
-    private TextView _tvBluetoothStatusText; //Статус Bluetooth
-
+    private CircularProgressButton _btnGo; //Кнопка на все случаи жизни
     private BluetoothHelper _bluetooth;
 
     public PlaceholderFragment() {
@@ -37,12 +33,7 @@ public class PlaceholderFragment extends Fragment {
      * Подготовка к работе, настройка gui
      */
     private void prepeareForWork(View v) {
-        _btnBluetoothOnOff   = (Button) v.findViewById(R.id.btnBluetoothOnOff);
-        _btnDeviceConnect = (Button) v.findViewById(R.id.btnDeciveConnect);
-        _btnSearchDevices = (Button) v.findViewById(R.id.btnSearchDevices);
-
-        _tvBluetoothStatus     = (TextView) v.findViewById(R.id.tvBluetoothStatus);
-        _tvBluetoothStatusText = (TextView) v.findViewById(R.id.tvBluetoothStatusText);
+        _btnGo = (CircularProgressButton) v.findViewById(R.id.btnGo);
 
         //Обработка нажатий
 
@@ -50,29 +41,12 @@ public class PlaceholderFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 switch (v.getId()) {
-                    case R.id.btnBluetoothOnOff:
-                        if (_bluetooth.isBluetooth()) {
-                            _tvBluetoothStatusText.setText(GlobalVars.gvStatusTextOn);
-                            _tvBluetoothStatusText.setTextColor(GlobalVars.gvStatusColorOn);
-                            _btnSearchDevices.setEnabled(true);
-                            _btnBluetoothOnOff.setText(GlobalVars.gvBtnStatusTextOff);
-                        } else {
-                            _tvBluetoothStatusText.setText(GlobalVars.gvStatusTextOff);
-                            _tvBluetoothStatusText.setTextColor(GlobalVars.gvStatusColorOff);
-                            _btnSearchDevices.setEnabled(false);
-                            _btnBluetoothOnOff.setText(GlobalVars.gvBtnStatusTextOn);
-                        }
-                        break;
-                    case R.id.btnDeciveConnect:
-                        break;
-                    case R.id.btnSearchDevices:
+                    case R.id.btnGo:
                         break;
                 }
             }
         };
 
-        _btnBluetoothOnOff.setOnClickListener(onClickBtns);
-        _btnDeviceConnect.setOnClickListener(onClickBtns);
-        _btnSearchDevices.setOnClickListener(onClickBtns);
+        _btnGo.setOnClickListener(onClickBtns);
     }
 }
