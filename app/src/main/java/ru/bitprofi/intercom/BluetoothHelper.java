@@ -58,7 +58,7 @@ public class BluetoothHelper {
       * Ищем устройства
       * @return Map<name, address>
      */
-    public HashMap getBluetoothDevices() {
+    public HashMap<String, String> getBluetoothDevices() {
         _ba.startDiscovery();
 
         Set<BluetoothDevice> pairedDevices = _ba.getBondedDevices();

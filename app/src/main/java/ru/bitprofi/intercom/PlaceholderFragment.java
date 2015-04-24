@@ -19,16 +19,14 @@ import java.util.Set;
 
 import at.markushi.ui.CircleButton;
 
-/**
- * A placeholder fragment containing a simple view.
- */
 public class PlaceholderFragment extends Fragment {
-    private CircleButton _btnGo;            //Кнопка на все случаи жизни
-    private ProgressBar _progressBar;       //Показывает длительность процесса
-    private BluetoothHelper _bluetooth;     //
     private Utils _utils;
-    private HashMap _devices;               //Список устройств вокруг
+    private BluetoothHelper _bluetooth;
 
+    private CircleButton _btnGo;       //Кнопка на все случаи жизни
+    private ProgressBar _progressBar;  //Показывает длительность процесса
+
+    private HashMap<String, String> _devices; //Список устройств вокруг
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
