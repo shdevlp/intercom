@@ -1,5 +1,6 @@
 package ru.bitprofi.intercom;
 
+import android.bluetooth.BluetoothDevice;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -22,6 +23,8 @@ import at.markushi.ui.CircleButton;
 public class PlaceholderFragment extends Fragment {
     private Utils _utils;
     private BluetoothHelper _bluetooth;
+    private BluetoothClient _client;
+    private BluetoothServer _server;
 
     private CircleButton _btnGo;       //Кнопка на все случаи жизни
     private ProgressBar _progressBar;  //Показывает длительность процесса
@@ -75,6 +78,39 @@ public class PlaceholderFragment extends Fragment {
     }
 
     /**
+     * Изучает имя устройства, если найдено сопрягаемое устройство возвращает true
+     * @param key
+     * @return
+     */
+    private boolean analizeKeyName(String key) {
+        final int idx = key.indexOf(GlobalVars.prefixDeviceName);
+        if (idx == -1) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Подключение к серверу
+     * @param key Имя
+     * @param value Адрес
+     */
+    private void connectToServer(BluetoothDevice device, String key, String value) {
+        GlobalVars.connectDeviceName = key;
+        GlobalVars.connectDeviceAddrs = value;
+
+        _client = new BluetoothClient(device, value);
+        _client.start();
+    }
+
+    /**
+     * Запуск сервера
+     */
+    private void startServer() {
+        _server = new BluetoothServer(_bluetooth.getAdapter());
+        _server.start();
+    }
+    /**
      * Обработка нажатия
      */
     private void btnGoClicked() {
@@ -96,13 +132,39 @@ public class PlaceholderFragment extends Fragment {
             //Получаем список устройств вокруг
             _devices = _bluetooth.getBluetoothDevices();
 
+            //Флаг подключения
+            boolean bConnect = false;
             for (HashMap.Entry<String, String> entry : _devices.entrySet()) {
                 String key = (String)entry.getKey();
                 String value = (String)entry.getValue();
+
+                //Нашли сервер, подключаемс к нему
+                if (analizeKeyName(key)) {
+                    bConnect = true;
+                    BluetoothDevice device = _bluetooth.getDevice(value);
+                    if (device != null) {
+                        connectToServer(device, key, value);
+                    } else {
+                        //....
+                    }
+                    break;
+                }
             }
+
+            //Не нашли сервер, значит мы первые -
+            // запускаем сервер
+            if (!bConnect) {
+                startServer();
+            }
+
         } else {
             _bluetooth.turnOff();
+            if (_server != null) {
+                _server.close();
+            }
+            if (_client != null) {
+                _client.close();
+            }
         }
-
     }
 }

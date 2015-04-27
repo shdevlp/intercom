@@ -13,4 +13,6 @@ public class GlobalVars {
     public static String currentDeviceName = null; //Текущее имя Bluetooth устройства
     public static String oldDeviceName = null;     //Старое имя Bluetooth устройства
     public static String currentAddress = null;    //Текущий адрес Bluetooth устройства
+    public static String connectDeviceName = null; //Сопрягаемое имя устройства
+    public static String connectDeviceAddrs = null;//Сопрягаемый адрес устройства
 }

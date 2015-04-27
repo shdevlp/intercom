@@ -5,13 +5,17 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.provider.Settings;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 
 /**
@@ -22,23 +26,11 @@ public class BluetoothHelper {
     private static final int REQUEST_DISCOVERABLE_BT = 0;
 
     private BluetoothAdapter _ba;
-    private BluetoothSocket _socket;
-    private BluetoothServerSocket _serverSocket;
     private Utils _utils;
 
     public BluetoothHelper() {
         _ba = BluetoothAdapter.getDefaultAdapter();
         _utils = new Utils();
-    }
-
-
-    /**
-     * Подключиться к устройству
-     * @param device
-     * @return
-     */
-    public boolean connectToDevice(BluetoothDevice device) {
-       return true;
     }
 
     /**
@@ -68,6 +60,21 @@ public class BluetoothHelper {
             map.put(bt.getName(), bt.getAddress());
         }
         return map;
+    }
+
+    /**
+     * Возвращает устройство по uuid
+     * @param uuid
+     * @return
+     */
+    public BluetoothDevice getDevice(String uuid) {
+        Set<BluetoothDevice> pairedDevices = _ba.getBondedDevices();
+        for (BluetoothDevice bt : pairedDevices) {
+            if (uuid.equals(bt.getAddress())) {
+                return bt;
+            }
+        }
+        return null;
     }
 
     /**
@@ -110,6 +117,14 @@ public class BluetoothHelper {
     }
 
     /**
+     * Вернуть адаптер
+     * @return
+     */
+    public BluetoothAdapter getAdapter() {
+        return _ba;
+    }
+
+    /**
      * Выключить Bluetooth
      */
     public void turnOff() {
@@ -128,4 +143,5 @@ public class BluetoothHelper {
     public boolean isEnabled() {
         return _ba.isEnabled();
     }
+
 }
