@@ -18,15 +18,13 @@ import java.util.UUID;
  * Created by Дмитрий on 27.04.2015.
  */
 
-public class BluetoothClient extends Thread {
-    private Utils _utils = null;
+public class BluetoothClient implements Runnable {
     private BluetoothSocket _socket = null;
     private volatile boolean _isEnable = false;
 
     public BluetoothClient(BluetoothDevice device, String uuid) {
-        _utils = new Utils();
         try {
-            _utils.setStatusText(GlobalVars.activity.getString(R.string.client_searching));
+            Utils.getInstance().setStatusText(GlobalVars.activity.getString(R.string.client_searching));
             _socket = device.createRfcommSocketToServiceRecord(UUID.fromString(uuid));
         } catch (IOException e) {
             // TODO Auto-generated catch block
@@ -56,7 +54,7 @@ public class BluetoothClient extends Thread {
             if (success) {
                 _isEnable = true;
                 //Успешно подлючились
-                _utils.setStatusText(GlobalVars.activity.getString(
+                Utils.getInstance().setStatusText(GlobalVars.activity.getString(
                         R.string.client_is_connected));
 
                 tmpIn = _socket.getInputStream();
@@ -75,7 +73,7 @@ public class BluetoothClient extends Thread {
             }
         } catch (IOException e) {
             e.printStackTrace();
-            _utils.setStatusText(GlobalVars.activity.getString(
+            Utils.getInstance().setStatusText(GlobalVars.activity.getString(
                     R.string.something_went_wrong) + ":\n" + e.getMessage());
             try {
                 _isEnable = false;
@@ -87,7 +85,7 @@ public class BluetoothClient extends Thread {
         }
 
         if (!success) {
-            _utils.setStatusText(GlobalVars.activity.getString(
+            Utils.getInstance().setStatusText(GlobalVars.activity.getString(
                     R.string.error_connected));
         }
     }
@@ -105,7 +103,7 @@ public class BluetoothClient extends Thread {
             ex.printStackTrace();
         }
 
-        _utils.setStatusText(GlobalVars.activity.getString(R.string.client_close));
+        Utils.getInstance().setStatusText(GlobalVars.activity.getString(R.string.client_close));
     }
 
 

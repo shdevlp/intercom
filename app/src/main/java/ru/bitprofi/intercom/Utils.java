@@ -3,6 +3,8 @@ package ru.bitprofi.intercom;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.media.AudioFormat;
+import android.media.AudioRecord;
 import android.widget.TextView;
 
 import java.io.FileNotFoundException;
@@ -14,6 +16,18 @@ import java.util.UUID;
  * Created by Дмитрий on 24.04.2015.
  */
 public class Utils {
+    private static class LazyHolder {
+        private static final Utils INSTANCE = new Utils();
+    }
+
+    /**
+     * Реализация синглтона
+     * @return
+     */
+    public static Utils getInstance() {
+        return LazyHolder.INSTANCE;
+    }
+
     /**
      * Диалог с одной кнопкой
      * @param title
@@ -92,7 +106,7 @@ public class Utils {
      * @return
      */
     public String getNewDeviceName() {
-        return GlobalVars.prefixDeviceName + UUID.randomUUID().toString();
+        return GlobalVars.PREFIX_DEVICE_NAME + UUID.randomUUID().toString();
     }
 
     /**
@@ -167,4 +181,98 @@ public class Utils {
             e.printStackTrace();
         }
     }
+
+    /**
+     * Проверка возврата функции getMinBufferSize
+     * @param buffSize
+     */
+    public void checkGetMinBufferSize(int buffSize) {
+        if (buffSize == AudioRecord.ERROR) {
+            throw new RuntimeException("AudioRecord.getMinBufferSize() = ERROR");
+        }
+        if (buffSize == AudioRecord.ERROR_BAD_VALUE) {
+            throw new RuntimeException("AudioRecord.getMinBufferSize() = ERROR_BAD_VALUE");
+        }
+    }
+
+    /**
+     * Проверка возврата функции AudioRecoder.read
+     * @param read
+     */
+    public void checkRead(int read) {
+        if (read == AudioRecord.ERROR_INVALID_OPERATION) {
+            throw new RuntimeException("AudioRecord.read() = ERROR_INVALID_OPERATION");
+        }
+        if (read == AudioRecord.ERROR_BAD_VALUE) {
+            throw new RuntimeException("AudioRecord.read() = ERROR_BAD_VALUE");
+        }
+    }
+
+    /*
+
+     int[] sampleRates = new int[] { 44100, 22050, 11025, 8000 };
+    Encoding[] encodings = new Encoding[] { Encoding.Pcm8bit, Encoding.Pcm16bit };
+    ChannelIn[] channelConfigs = new ChannelIn[]{ ChannelIn.Mono, ChannelIn.Stereo };
+
+    //Not all of the formats are supported on each device
+    foreach (int sampleRate in sampleRates)
+    {
+        foreach (Encoding encoding in encodings)
+        {
+            foreach (ChannelIn channelConfig in channelConfigs)
+            {
+                try
+                {
+                    Console.WriteLine("Attempting rate " + sampleRate + "Hz, bits: " + encoding + ", channel: " + channelConfig);
+                    int bufferSize = AudioRecord.GetMinBufferSize(sampleRate, channelConfig, encoding);
+
+                    if (bufferSize > 0)
+                    {
+                        // check if we can instantiate and have a success
+                        AudioRecord recorder = new AudioRecord(AudioSource.Mic, sampleRate, channelConfig, encoding, bufferSize);
+
+                        if (recorder.State == State.Initialized)
+                        {
+                            mBufferSize = bufferSize;
+                            mSampleRate = sampleRate;
+                            mChannelConfig = channelConfig;
+                            mEncoding = encoding;
+                            recorder.Release();
+                            recorder = null;
+                            return true;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(sampleRate + "Exception, keep trying." + ex.Message);
+                }
+            }
+        }
+    }
+     */
+
+    /*
+      private static int[] mSampleRates = new int[] { 8000, 11025, 22050, 44100 };
+
+    private AudioRecord findAudioRecord() {
+        for (int rate : mSampleRates) {
+            for (short audioFormat : new short[] { AudioFormat.ENCODING_PCM_8BIT, AudioFormat.ENCODING_PCM_16BIT }) {
+                for (short channelConfig : new short[] { AudioFormat.CHANNEL_IN_MONO, AudioFormat.CHANNEL_IN_STEREO }) {
+                    try {
+                        int bufferSize = AudioRecord.getMinBufferSize(rate, channelConfig, audioFormat);
+
+                        if (bufferSize != AudioRecord.ERROR_BAD_VALUE) {
+                            AudioRecord recorder = new AudioRecord(MediaRecorder.AudioSource.DEFAULT, rate, channelConfig, audioFormat, bufferSize);
+                            if (recorder.getState() == AudioRecord.STATE_INITIALIZED)
+                                return recorder;
+                        }
+                    } catch (Exception e) {
+                    }
+                }
+            }
+        }
+        return null;
+    }
+    * */
 }

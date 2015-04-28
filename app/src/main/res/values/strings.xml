@@ -13,6 +13,7 @@
     <string name="dialog_title">Информация</string>
     <string name="something_went_wrong">Что то пошло не так</string>
     <string name="error_connected">Ошибка подключения</string>
+
     <string name="server_is_connected">Есть подключение</string>
     <string name="server_wait_connection">Сервер ждет подключения</string>
     <string name="server_closing">Выключение сервера...</string>
@@ -22,5 +23,7 @@
     <string name="client_is_connected">Клиент подключился</string>
     <string name="client_closing">Клиент закрывает подключение</string>
     <string name="client_close">Клиент закрыл подключение</string>
+
+
 
 </resources>

@@ -26,11 +26,9 @@ public class BluetoothHelper {
     private static final int REQUEST_DISCOVERABLE_BT = 0;
 
     private BluetoothAdapter _ba;
-    private Utils _utils;
 
     public BluetoothHelper() {
         _ba = BluetoothAdapter.getDefaultAdapter();
-        _utils = new Utils();
     }
 
     /**
@@ -90,7 +88,7 @@ public class BluetoothHelper {
      */
     public void turnOn() {
         if (_ba == null) {
-            _utils.dialog(R.string.dialog_title,
+            Utils.getInstance().dialog(R.string.dialog_title,
                     R.string.bluetooth_not_supported, R.string.dialog_ok);
             return;
         }
@@ -130,9 +128,9 @@ public class BluetoothHelper {
     public void turnOff() {
         String old = GlobalVars.oldDeviceName;
         changeDeviceName(old);
-        _utils.sleep(100);
+        Utils.getInstance().sleep(100);
         _ba.disable();
-        _utils.dialog(R.string.dialog_title,
+        Utils.getInstance().dialog(R.string.dialog_title,
                      R.string.bluetooth_turn_off, R.string.dialog_ok);
     }
 

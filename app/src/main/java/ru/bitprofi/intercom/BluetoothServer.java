@@ -21,15 +21,13 @@ import java.util.UUID;
 /**
  * Реализация сервера
  */
-public class BluetoothServer extends Thread {
+public class BluetoothServer implements Runnable {
     private BluetoothServerSocket _serverSocket = null;
     private BluetoothAdapter _ba = null;
-    private Utils _utils = null;
     private volatile boolean _isEnable = false;
 
     public BluetoothServer(BluetoothAdapter ba) {
-        _utils = new Utils();
-        _ba = ba;
+         _ba = ba;
         try {
             String[] strs = GlobalVars.currentDeviceName.split("_");
             String name = strs[0];
@@ -37,7 +35,7 @@ public class BluetoothServer extends Thread {
 
             _serverSocket = _ba.listenUsingRfcommWithServiceRecord(name, uuid);
 
-            _utils.setStatusText(GlobalVars.activity.getString(R.string.server_wait_connection));
+            Utils.getInstance().setStatusText(GlobalVars.activity.getString(R.string.server_wait_connection));
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -57,7 +55,7 @@ public class BluetoothServer extends Thread {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-        _utils.setStatusText(GlobalVars.activity.getString(R.string.server_close));
+        Utils.getInstance().setStatusText(GlobalVars.activity.getString(R.string.server_close));
     }
 
     /**
@@ -89,7 +87,7 @@ public class BluetoothServer extends Thread {
                         remoteDevice.getName() + "\n" + remoteDevice.getAddress();
 
                 //Есть подключение
-                _utils.setStatusText(strConnected);
+                Utils.getInstance().setStatusText(strConnected);
 
                 _serverSocket.close();
 
@@ -109,12 +107,12 @@ public class BluetoothServer extends Thread {
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
-                _utils.setStatusText(GlobalVars.activity.getString(
+                Utils.getInstance().setStatusText(GlobalVars.activity.getString(
                         R.string.something_went_wrong) + e.getMessage());
             }
         }else{
             _isEnable = false;
-            _utils.setStatusText(GlobalVars.activity.getString(
+            Utils.getInstance().setStatusText(GlobalVars.activity.getString(
                     R.string.server_close));
         }
     }

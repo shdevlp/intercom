@@ -17,11 +17,12 @@ import com.dd.CircularProgressButton;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import android.os.*;
+import java.util.logging.LogRecord;
 
 import at.markushi.ui.CircleButton;
 
 public class PlaceholderFragment extends Fragment {
-    private Utils _utils;
     private BluetoothHelper _bluetooth;
     private BluetoothClient _client;
     private BluetoothServer _server;
@@ -31,13 +32,34 @@ public class PlaceholderFragment extends Fragment {
 
     private HashMap<String, String> _devices; //Список устройств вокруг
 
+    private MicHelper _mic;
+    private SpeakerHelper _speaker;
+
+    private Handler _handler;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-        _utils = new Utils();
         _bluetooth = new BluetoothHelper();
-        GlobalVars.currentDeviceName = _utils.getNewDeviceName();
+
+        _mic = new MicHelper();
+        _speaker = new SpeakerHelper();
+
+        _handler = new Handler() {
+            public void handleMessage(android.os.Message msg) {
+                if (msg.what == GlobalVars.MIC_MSG_DATA) {
+                    //Звуковые данные пришли с микрофона
+                    //Проиграть!
+                    _speaker.addData((short[])msg.obj);
+                }
+
+            }
+        };
+
+        _mic.addHandler(_handler);
+
+        GlobalVars.currentDeviceName = Utils.getInstance().getNewDeviceName();
         prepeareForWork(rootView);
         return rootView;
     }
@@ -83,7 +105,7 @@ public class PlaceholderFragment extends Fragment {
      * @return
      */
     private boolean analizeKeyName(String key) {
-        final int idx = key.indexOf(GlobalVars.prefixDeviceName);
+        final int idx = key.indexOf(GlobalVars.PREFIX_DEVICE_NAME);
         if (idx == -1) {
             return false;
         }
@@ -100,7 +122,7 @@ public class PlaceholderFragment extends Fragment {
         GlobalVars.connectDeviceAddrs = value;
 
         _client = new BluetoothClient(device, value);
-        _client.start();
+        _client.run();
     }
 
     /**
@@ -108,42 +130,52 @@ public class PlaceholderFragment extends Fragment {
      */
     private void startServer() {
         _server = new BluetoothServer(_bluetooth.getAdapter());
-        _server.start();
+        _server.run();
     }
     /**
      * Обработка нажатия
      */
     private void btnGoClicked() {
-        if(!_bluetooth.isEnabled()) {
+        if (!_bluetooth.isEnabled()) {
             _bluetooth.turnOn();
+
             //Ждем включения bluetooth
             while (!_bluetooth.isEnabled()) {
-                _utils.sleep(5);
+                Utils.getInstance().sleep(5);
             }
-            _utils.sleep(100);
+            Utils.getInstance().sleep(100);
+
             //Запоминаем адрес Bluetooth
             GlobalVars.currentAddress = _bluetooth.getAddress();
+
             //Запоминаем старое имя
             GlobalVars.oldDeviceName  = _bluetooth.getName();
+
             //Меняем на новое имя
             _bluetooth.changeDeviceName(GlobalVars.currentDeviceName);
+
             //Делаем доступным для обнаружения
             _bluetooth.makeDiscoverable();
+
             //Получаем список устройств вокруг
             _devices = _bluetooth.getBluetoothDevices();
 
             //Флаг подключения
             boolean bConnect = false;
+
             for (HashMap.Entry<String, String> entry : _devices.entrySet()) {
                 String key = (String)entry.getKey();
                 String value = (String)entry.getValue();
 
                 //Нашли сервер, подключаемс к нему
                 if (analizeKeyName(key)) {
-                    bConnect = true;
                     BluetoothDevice device = _bluetooth.getDevice(value);
+
                     if (device != null) {
                         connectToServer(device, key, value);
+                        bConnect = true;
+                        _mic.run();
+                        _speaker.run();
                     } else {
                         //....
                     }
@@ -154,10 +186,15 @@ public class PlaceholderFragment extends Fragment {
             //Не нашли сервер, значит мы первые -
             // запускаем сервер
             if (!bConnect) {
+                _mic.run();
+                _speaker.run();
                 startServer();
             }
 
         } else {
+            _mic.stop();
+            _speaker.stop();
+
             _bluetooth.turnOff();
             if (_server != null) {
                 _server.close();
