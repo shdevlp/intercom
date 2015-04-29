@@ -4,7 +4,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.DataInputStream;
@@ -15,18 +14,19 @@ import java.io.OutputStream;
 import java.util.UUID;
 
 /**
+ * Реализация сервера
  * Created by Дмитрий on 27.04.2015.
  */
-
-/**
- * Реализация сервера
- */
-public class BluetoothServer implements Runnable {
+public class BluetoothServer extends CommonThreadObject {
     private BluetoothServerSocket _serverSocket = null;
     private BluetoothAdapter _ba = null;
-    private volatile boolean _isEnable = false;
 
+    /**
+     * Инициализация
+     * @param ba
+     */
     public BluetoothServer(BluetoothAdapter ba) {
+        super(GlobalVars.CLIENT_MSG_DATA);
          _ba = ba;
         try {
             String[] strs = GlobalVars.currentDeviceName.split("_");
@@ -35,7 +35,8 @@ public class BluetoothServer implements Runnable {
 
             _serverSocket = _ba.listenUsingRfcommWithServiceRecord(name, uuid);
 
-            Utils.getInstance().setStatusText(GlobalVars.activity.getString(R.string.server_wait_connection));
+            Utils.getInstance().setStatusText(GlobalVars.activity.getString(
+                    R.string.server_wait_connection));
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -46,9 +47,9 @@ public class BluetoothServer implements Runnable {
      * Закрытие сервера
      */
     public void close() {
+        super.close();
         try {
             if (_serverSocket != null) {
-                _isEnable = false;
                 _serverSocket.accept(50);
                 _serverSocket.close();
             }
@@ -69,14 +70,13 @@ public class BluetoothServer implements Runnable {
         DataInputStream  inStream = null;
         DataOutputStream outStream = null;
 
-        byte[] buffer = new byte[1024];
         int bytesRead;
         int availableBytes;
 
         if (_serverSocket != null){
             try {
                 socket = _serverSocket.accept();
-                _isEnable = true;
+                _isRunning = true;
                 BluetoothDevice remoteDevice = socket.getRemoteDevice();
 
                 GlobalVars.connectDeviceName = remoteDevice.getName();
@@ -97,13 +97,24 @@ public class BluetoothServer implements Runnable {
                 inStream = new DataInputStream(tmpIn);
                 outStream = new DataOutputStream(tmpOut);
 
-                while (_isEnable) {
+                while (_isRunning) {
+                    //Получаем данные(если есть)
                     availableBytes = inStream.available();
                     if(availableBytes > 0) {
+                        byte[] buffer = new byte[availableBytes];
                         bytesRead = inStream.read(buffer);
+                        if (bytesRead > 0) {
+                            sendMsg(buffer);
+                        }
+                    }
+
+                    //Отправляем серверу(если они есть)
+                    if (_isSendEnabled == false && _sendBuffer != null) {
+                        outStream.write(_sendBuffer, 0, _sendBuffer.length);
+                        _sendBuffer = null;
+                        _isSendEnabled = true;
                     }
                 }
-
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -111,7 +122,7 @@ public class BluetoothServer implements Runnable {
                         R.string.something_went_wrong) + e.getMessage());
             }
         }else{
-            _isEnable = false;
+            _isRunning = false;
             Utils.getInstance().setStatusText(GlobalVars.activity.getString(
                     R.string.server_close));
         }
@@ -126,7 +137,7 @@ public class BluetoothServer implements Runnable {
                 Toast.LENGTH_LONG).show();
 
         try {
-            _isEnable = false;
+            _isRunning = false;
             _serverSocket.close();
         } catch (IOException e) {
             // TODO Auto-generated catch block

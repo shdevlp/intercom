@@ -3,52 +3,37 @@ package ru.bitprofi.intercom;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
-import android.os.*;
 import android.os.Process;
-import android.util.Log;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by Дмитрий on 22.04.2015.
  * Работа с микрофоном
  */
-public class MicHelper implements Runnable {
-    private boolean _isRunning = false;
+public class MicHelper extends CommonThreadObject {
     private AudioRecord _recorder = null;
-    private List<Handler> _handlers;
 
     /**
-     * Конструктор
+     * Инициализация
      */
-    public MicHelper(){
-        _handlers = new ArrayList<Handler>();
+    public MicHelper() {
+        super(GlobalVars.MIC_MSG_DATA);
     }
 
     /**
      * Остановка потока записи с микрофона
      */
-    public void stop() {
+    public void close() {
+        super.close();
         if (null != _recorder) {
-            _isRunning = false;
             _recorder.stop();
             _recorder.release();
             _recorder = null;
         }
     }
 
-    /**
-     *
-     * @param handler
-     */
-    public void addHandler(Handler handler) {
-        _handlers.add(handler);
-    }
-
     @Override
     public void run() {
-        //android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
+        android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
 
         _isRunning = true;
 
@@ -57,12 +42,14 @@ public class MicHelper implements Runnable {
 
         Utils.getInstance().checkGetMinBufferSize(buffSize);
 
-        _recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, GlobalVars.AUDIO_SAMPLERATE,
-                AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,
-                GlobalVars.BUFFER_ELEMENTS * GlobalVars.BYTES_PER_ELEMENT);
+        _recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
+                                    GlobalVars.AUDIO_SAMPLERATE,
+                                    AudioFormat.CHANNEL_IN_MONO,
+                                    AudioFormat.ENCODING_PCM_16BIT,
+                                    GlobalVars.BYTES_PER_ELEMENT * buffSize);
 
         if (_recorder.getState() != AudioRecord.STATE_INITIALIZED) {
-            throw new RuntimeException("AudioRecoder.getState() != STATE_INITIALIZED");
+            throw new RuntimeException("AudioRecord.getState() != STATE_INITIALIZED");
         }
 
         try {
@@ -73,7 +60,7 @@ public class MicHelper implements Runnable {
 
         // Циклический буфер буферов. Чтобы не затереть данные,
         // пока главный поток их обрабатывает
-        short[][] buffers = new short[GlobalVars.BUFFER_COUNT][GlobalVars.BUFFER_ELEMENTS];
+        byte[][] buffers = new byte[GlobalVars.BUFFER_COUNT][GlobalVars.BYTES_PER_ELEMENT * buffSize];
         int count = 0;
 
         while (_isRunning) {
@@ -83,16 +70,6 @@ public class MicHelper implements Runnable {
 
             sendMsg(buffers[count]);
             count = (count + 1) % GlobalVars.BUFFER_COUNT;
-        }
-    }
-
-    /**
-     * Посылаем данные получателю
-     * @param data
-     */
-    private void sendMsg(short[] data) {
-        for(Handler handler : _handlers) {
-            handler.sendMessage(handler.obtainMessage(GlobalVars.MIC_MSG_DATA, data));
         }
     }
 }

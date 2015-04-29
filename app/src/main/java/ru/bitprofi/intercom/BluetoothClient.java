@@ -1,10 +1,7 @@
 package ru.bitprofi.intercom;
 
-import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.provider.Settings;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.DataInputStream;
@@ -15,14 +12,21 @@ import java.io.OutputStream;
 import java.util.UUID;
 
 /**
+ * Реализация клиента
  * Created by Дмитрий on 27.04.2015.
  */
-
-public class BluetoothClient implements Runnable {
+public class BluetoothClient extends CommonThreadObject {
     private BluetoothSocket _socket = null;
-    private volatile boolean _isEnable = false;
 
+    /**
+     * Инициализация
+     *
+     * @param device
+     * @param uuid
+     */
     public BluetoothClient(BluetoothDevice device, String uuid) {
+        super(GlobalVars.SERVER_MSG_DATA);
+
         try {
             Utils.getInstance().setStatusText(GlobalVars.activity.getString(R.string.client_searching));
             _socket = device.createRfcommSocketToServiceRecord(UUID.fromString(uuid));
@@ -37,14 +41,13 @@ public class BluetoothClient implements Runnable {
      */
     @Override
     public void run() {
-        InputStream tmpIn  = null;
+        InputStream tmpIn = null;
         OutputStream tmpOut = null;
         DataInputStream inStream = null;
         DataOutputStream outStream = null;
 
-        byte[] buffer = new byte[1024];
-        int bytesRead;
         int availableBytes;
+        int bytesRead;
 
         boolean success = false;
         try {
@@ -52,7 +55,7 @@ public class BluetoothClient implements Runnable {
             success = true;
 
             if (success) {
-                _isEnable = true;
+                _isRunning = true;
                 //Успешно подлючились
                 Utils.getInstance().setStatusText(GlobalVars.activity.getString(
                         R.string.client_is_connected));
@@ -63,20 +66,31 @@ public class BluetoothClient implements Runnable {
                 inStream = new DataInputStream(tmpIn);
                 outStream = new DataOutputStream(tmpOut);
 
-                while (_isEnable) {
+                while (_isRunning) {
+                    //Получаем данные с сервера(если они есть)
                     availableBytes = inStream.available();
                     if (availableBytes > 0) {
+                        byte[] buffer = new byte[availableBytes];
                         bytesRead = inStream.read(buffer);
+                        if (bytesRead > 0) {
+                            sendMsg(buffer);
+                        }
+                    }
+
+                    //Отправляем данные клиенту(если они есть)
+                    if (_isSendEnabled == false && _sendBuffer != null) {
+                        outStream.write(_sendBuffer, 0, _sendBuffer.length);
+                        _sendBuffer = null;
+                        _isSendEnabled = true;
                     }
                 }
-
             }
         } catch (IOException e) {
             e.printStackTrace();
             Utils.getInstance().setStatusText(GlobalVars.activity.getString(
                     R.string.something_went_wrong) + ":\n" + e.getMessage());
             try {
-                _isEnable = false;
+                _isRunning = false;
                 _socket.close();
             } catch (IOException e1) {
                 // TODO Auto-generated catch block
@@ -94,15 +108,14 @@ public class BluetoothClient implements Runnable {
      * Закрытие клиента
      */
     public void close() {
+        super.close();
         try {
             if (_socket != null) {
-                _isEnable = false;
                 _socket.close();
             }
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-
         Utils.getInstance().setStatusText(GlobalVars.activity.getString(R.string.client_close));
     }
 
@@ -111,17 +124,17 @@ public class BluetoothClient implements Runnable {
      * Отмена
      */
     public void cancel() {
+        super.cancel();
+
         Toast.makeText(GlobalVars.activity.getApplicationContext(),
                 GlobalVars.activity.getString(R.string.client_closing),
                 Toast.LENGTH_LONG).show();
 
         try {
-            _isEnable = false;
             _socket.close();
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
     }
 }

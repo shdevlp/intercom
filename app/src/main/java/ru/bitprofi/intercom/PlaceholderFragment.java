@@ -32,8 +32,9 @@ public class PlaceholderFragment extends Fragment {
 
     private HashMap<String, String> _devices; //Список устройств вокруг
 
-    private MicHelper _mic;
+    private MicHelper     _mic;
     private SpeakerHelper _speaker;
+    private MicPlayer     _player;
 
     private Handler _handler;
 
@@ -43,21 +44,44 @@ public class PlaceholderFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         _bluetooth = new BluetoothHelper();
 
-        _mic = new MicHelper();
+        _mic     = new MicHelper();
         _speaker = new SpeakerHelper();
+        _player  = new MicPlayer();
 
         _handler = new Handler() {
             public void handleMessage(android.os.Message msg) {
-                if (msg.what == GlobalVars.MIC_MSG_DATA) {
-                    //Звуковые данные пришли с микрофона
-                    //Проиграть!
-                    _speaker.addData((short[])msg.obj);
-                }
+                byte[] data = (byte[])msg.obj;
 
+                switch (msg.what) {
+                    case GlobalVars.MIC_MSG_DATA:
+                        //Данные с микрофона
+                        _speaker.setSendData((byte[])msg.obj);
+                        break;
+                    case GlobalVars.SPEAKER_MSG_DATA:
+                        //Данные для динамика
+                        break;
+                    case GlobalVars.SERVER_MSG_DATA:
+                        //Данные от сервера для клиента
+                        while (!_client.isSendEnabled()) {
+                            Utils.getInstance().sleep(1);
+                        }
+                        _client.setSendData(data);
+                        break;
+                    case GlobalVars.CLIENT_MSG_DATA:
+                        //Данные от клиента для сервера
+                        while (!_server.isSendEnabled()) {
+                            Utils.getInstance().sleep(1);
+                        }
+                        _server.setSendData(data);
+                        break;
+                }
             }
         };
 
-        _mic.addHandler(_handler);
+        _mic.addReciever(_handler);
+        _speaker.addReciever(_handler);
+        _client.addReciever(_handler);
+        _server.addReciever(_handler);
 
         GlobalVars.currentDeviceName = Utils.getInstance().getNewDeviceName();
         prepeareForWork(rootView);
@@ -78,9 +102,9 @@ public class PlaceholderFragment extends Fragment {
             public void onClick(View v) {
                 switch (v.getId()) {
                     case R.id.btnGo:
-                        btnGoClicked();
                         changeBtnColor();
-                        break;
+                        btnGoClicked();
+                    break;
                 }
             }
         };
@@ -122,7 +146,7 @@ public class PlaceholderFragment extends Fragment {
         GlobalVars.connectDeviceAddrs = value;
 
         _client = new BluetoothClient(device, value);
-        _client.run();
+        _client.start();
     }
 
     /**
@@ -130,7 +154,7 @@ public class PlaceholderFragment extends Fragment {
      */
     private void startServer() {
         _server = new BluetoothServer(_bluetooth.getAdapter());
-        _server.run();
+        _server.start();
     }
     /**
      * Обработка нажатия
@@ -145,14 +169,10 @@ public class PlaceholderFragment extends Fragment {
             }
             Utils.getInstance().sleep(100);
 
-            //Запоминаем адрес Bluetooth
-            GlobalVars.currentAddress = _bluetooth.getAddress();
+            GlobalVars.currentAddress = _bluetooth.getAddress();//Запоминаем адрес Bluetooth
+            GlobalVars.oldDeviceName  = _bluetooth.getName();   //Запоминаем старое имя
 
-            //Запоминаем старое имя
-            GlobalVars.oldDeviceName  = _bluetooth.getName();
-
-            //Меняем на новое имя
-            _bluetooth.changeDeviceName(GlobalVars.currentDeviceName);
+            _bluetooth.changeDeviceName(GlobalVars.currentDeviceName);//Меняем на новое имя
 
             //Делаем доступным для обнаружения
             _bluetooth.makeDiscoverable();
@@ -162,7 +182,6 @@ public class PlaceholderFragment extends Fragment {
 
             //Флаг подключения
             boolean bConnect = false;
-
             for (HashMap.Entry<String, String> entry : _devices.entrySet()) {
                 String key = (String)entry.getKey();
                 String value = (String)entry.getValue();
@@ -174,8 +193,10 @@ public class PlaceholderFragment extends Fragment {
                     if (device != null) {
                         connectToServer(device, key, value);
                         bConnect = true;
-                        _mic.run();
-                        _speaker.run();
+                        /*
+                        _mic.start();
+                        _speaker.start();
+                        */
                     } else {
                         //....
                     }
@@ -186,15 +207,17 @@ public class PlaceholderFragment extends Fragment {
             //Не нашли сервер, значит мы первые -
             // запускаем сервер
             if (!bConnect) {
-                _mic.run();
-                _speaker.run();
+                _mic.start();
+                _speaker.start();
+//                _player.start();
                 startServer();
             }
 
         } else {
-            _mic.stop();
-            _speaker.stop();
+            _mic.close();
+            _speaker.close();
 
+           // _player.close();
             _bluetooth.turnOff();
             if (_server != null) {
                 _server.close();

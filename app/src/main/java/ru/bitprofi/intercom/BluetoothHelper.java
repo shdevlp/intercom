@@ -2,23 +2,13 @@ package ru.bitprofi.intercom;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothServerSocket;
-import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
-import android.provider.Settings;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 
 /**
+ * Поддержка Bluetooth
  * Created by Дмитрий on 22.04.2015.
  */
 public class BluetoothHelper {
