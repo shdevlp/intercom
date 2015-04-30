@@ -16,9 +16,10 @@ public class CommonThreadObject extends Thread {
     protected byte[] _sendBuffer = null;      //Данные для отправки
 
     protected boolean _isRunning = false;     //Флаг работы потока
-    protected boolean _isSendEnabled = false; //Разрешение записывать данные для отправки
+    protected boolean _isSendEnabled = true; //Разрешение записывать данные для отправки
 
     private int _msgType = -1;
+
     /**
      * Инициализация
      */

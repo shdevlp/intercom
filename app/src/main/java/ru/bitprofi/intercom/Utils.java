@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.media.AudioFormat;
+import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.widget.TextView;
 
@@ -183,6 +184,18 @@ public class Utils {
     }
 
     /**
+     * Ждет установления нового статуса у Bluetooth
+     * @param bluetooth
+     * @param newState
+     */
+    public void waitBluetoothState(BluetoothHelper bluetooth, boolean newState) {
+        while (bluetooth.isEnabled() != newState) {
+            Utils.getInstance().sleep(5);
+        }
+        Utils.getInstance().sleep(100);
+    }
+
+    /**
      * Проверка возврата функции getMinBufferSize
      * @param buffSize
      */
@@ -208,71 +221,37 @@ public class Utils {
         }
     }
 
-    /*
 
-     int[] sampleRates = new int[] { 44100, 22050, 11025, 8000 };
-    Encoding[] encodings = new Encoding[] { Encoding.Pcm8bit, Encoding.Pcm16bit };
-    ChannelIn[] channelConfigs = new ChannelIn[]{ ChannelIn.Mono, ChannelIn.Stereo };
-
-    //Not all of the formats are supported on each device
-    foreach (int sampleRate in sampleRates)
-    {
-        foreach (Encoding encoding in encodings)
-        {
-            foreach (ChannelIn channelConfig in channelConfigs)
-            {
-                try
-                {
-                    Console.WriteLine("Attempting rate " + sampleRate + "Hz, bits: " + encoding + ", channel: " + channelConfig);
-                    int bufferSize = AudioRecord.GetMinBufferSize(sampleRate, channelConfig, encoding);
-
-                    if (bufferSize > 0)
-                    {
-                        // check if we can instantiate and have a success
-                        AudioRecord recorder = new AudioRecord(AudioSource.Mic, sampleRate, channelConfig, encoding, bufferSize);
-
-                        if (recorder.State == State.Initialized)
-                        {
-                            mBufferSize = bufferSize;
-                            mSampleRate = sampleRate;
-                            mChannelConfig = channelConfig;
-                            mEncoding = encoding;
-                            recorder.Release();
-                            recorder = null;
-                            return true;
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(sampleRate + "Exception, keep trying." + ex.Message);
-                }
-            }
-        }
-    }
+    /**
+     * Установка минимального размера буфера
      */
-
-    /*
-      private static int[] mSampleRates = new int[] { 8000, 11025, 22050, 44100 };
-
-    private AudioRecord findAudioRecord() {
-        for (int rate : mSampleRates) {
-            for (short audioFormat : new short[] { AudioFormat.ENCODING_PCM_8BIT, AudioFormat.ENCODING_PCM_16BIT }) {
-                for (short channelConfig : new short[] { AudioFormat.CHANNEL_IN_MONO, AudioFormat.CHANNEL_IN_STEREO }) {
-                    try {
-                        int bufferSize = AudioRecord.getMinBufferSize(rate, channelConfig, audioFormat);
-
-                        if (bufferSize != AudioRecord.ERROR_BAD_VALUE) {
-                            AudioRecord recorder = new AudioRecord(MediaRecorder.AudioSource.DEFAULT, rate, channelConfig, audioFormat, bufferSize);
-                            if (recorder.getState() == AudioRecord.STATE_INITIALIZED)
-                                return recorder;
-                        }
-                    } catch (Exception e) {
-                    }
-                }
-            }
+    public void setMinBufferSize() {
+        if (GlobalVars.MIN_BUFFER_SIZE <= 0) {
+            GlobalVars.MIN_BUFFER_SIZE = AudioRecord.getMinBufferSize(GlobalVars.AUDIO_SAMPLERATE,
+                    AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
+            Utils.getInstance().checkGetMinBufferSize(GlobalVars.MIN_BUFFER_SIZE);
         }
-        return null;
     }
-    * */
+    /**
+     * Максимальная громкость
+     */
+    public void setMaxVolume() {
+        final AudioManager audioManager = (AudioManager) GlobalVars.context
+                .getSystemService(GlobalVars.context.AUDIO_SERVICE);
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC,
+                audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC), 0);
+        audioManager.setSpeakerphoneOn(true);
+    }
+
+    /**
+     * Минимальная громкость
+     */
+    public void setMinVolume() {
+        final AudioManager audioManager = (AudioManager) GlobalVars.context
+                .getSystemService(GlobalVars.context.AUDIO_SERVICE);
+        final int originalVolume = audioManager
+                .getStreamVolume(AudioManager.STREAM_MUSIC);
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalVolume, 0);
+        audioManager.setSpeakerphoneOn(false);
+    }
 }

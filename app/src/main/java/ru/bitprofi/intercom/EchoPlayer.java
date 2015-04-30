@@ -10,14 +10,23 @@ import android.media.MediaRecorder;
  * Запись и проигрывание одновременно на
  * локальном устройстве
  */
-public class MicPlayer extends Thread {
-    private boolean _isRunning = false;
-
+public class EchoPlayer extends CommonThreadObject {
     private AudioRecord _recorder = null;
     private AudioTrack  _player = null;
 
+    /**
+     * Инициализация
+     */
+    public EchoPlayer() {
+        super(GlobalVars.PLAYER_MSG_DATA);
+    }
+
+    /**
+     *
+     */
     public void close() {
-        _isRunning = false;
+        super.close();
+
         if (null != _player) {
             _player.stop();
             _player.release();
@@ -36,22 +45,20 @@ public class MicPlayer extends Thread {
 
         _isRunning = true;
 
-        int buffSize = AudioRecord.getMinBufferSize(GlobalVars.AUDIO_SAMPLERATE,
-                AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
-
-        Utils.getInstance().checkGetMinBufferSize(buffSize);
+        Utils.getInstance().setMinBufferSize();
 
         _recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
                 GlobalVars.AUDIO_SAMPLERATE,
                 AudioFormat.CHANNEL_IN_MONO,
                 AudioFormat.ENCODING_PCM_16BIT,
-                GlobalVars.BYTES_PER_ELEMENT * buffSize);
+                GlobalVars.BYTES_PER_ELEMENT * GlobalVars.MIN_BUFFER_SIZE);
 
         _player = new AudioTrack(AudioManager.STREAM_VOICE_CALL,
                 GlobalVars.AUDIO_SAMPLERATE,
                 AudioFormat.CHANNEL_OUT_MONO,
                 AudioFormat.ENCODING_PCM_16BIT,
-                GlobalVars.BYTES_PER_ELEMENT * buffSize, AudioTrack.MODE_STREAM);
+                GlobalVars.BYTES_PER_ELEMENT * GlobalVars.MIN_BUFFER_SIZE,
+                AudioTrack.MODE_STREAM);
 
         if (_player.getState() != AudioTrack.STATE_INITIALIZED) {
             throw new RuntimeException("AudioTrack.getState() != STATE_INITIALIZED");
@@ -67,14 +74,12 @@ public class MicPlayer extends Thread {
             throw new RuntimeException(e.getMessage());
         }
         _player.setPlaybackRate(GlobalVars.AUDIO_SAMPLERATE);
-        //_player.setVolume(1.0f);
 
-        short[] buffer = new short[buffSize];
+        short[] buffer = new short[GlobalVars.MIN_BUFFER_SIZE];
         while (_isRunning) {
             int samplesRead = _recorder.read(buffer, 0, buffer.length);
             Utils.getInstance().checkRead(samplesRead);
             _player.write(buffer, 0, buffer.length);
         }
     }
-
 }

@@ -33,20 +33,16 @@ public class MicHelper extends CommonThreadObject {
 
     @Override
     public void run() {
-        android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
-
         _isRunning = true;
 
-        int buffSize = AudioRecord.getMinBufferSize(GlobalVars.AUDIO_SAMPLERATE,
-                AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
-
-        Utils.getInstance().checkGetMinBufferSize(buffSize);
+        android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
+        Utils.getInstance().setMinBufferSize();
 
         _recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
                                     GlobalVars.AUDIO_SAMPLERATE,
                                     AudioFormat.CHANNEL_IN_MONO,
                                     AudioFormat.ENCODING_PCM_16BIT,
-                                    GlobalVars.BYTES_PER_ELEMENT * buffSize);
+                                    GlobalVars.BYTES_PER_ELEMENT * GlobalVars.MIN_BUFFER_SIZE);
 
         if (_recorder.getState() != AudioRecord.STATE_INITIALIZED) {
             throw new RuntimeException("AudioRecord.getState() != STATE_INITIALIZED");
@@ -60,7 +56,7 @@ public class MicHelper extends CommonThreadObject {
 
         // Циклический буфер буферов. Чтобы не затереть данные,
         // пока главный поток их обрабатывает
-        byte[][] buffers = new byte[GlobalVars.BUFFER_COUNT][GlobalVars.BYTES_PER_ELEMENT * buffSize];
+        byte[][] buffers = new byte[GlobalVars.BUFFER_COUNT][GlobalVars.BYTES_PER_ELEMENT * GlobalVars.MIN_BUFFER_SIZE];
         int count = 0;
 
         while (_isRunning) {

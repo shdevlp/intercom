@@ -4,6 +4,8 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
+import android.os.*;
+import android.os.Process;
 
 /**
  * Created by Дмитрий on 22.04.2015.
@@ -33,28 +35,24 @@ public class SpeakerHelper extends CommonThreadObject {
 
     @Override
     public void run() {
-        android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
-
         _isRunning = true;
 
-        int buffSize = AudioRecord.getMinBufferSize(GlobalVars.AUDIO_SAMPLERATE,
-                AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT);
-
-        Utils.getInstance().checkGetMinBufferSize(buffSize);
+        android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
+        Utils.getInstance().setMinBufferSize();
 
         _player = new AudioTrack(AudioManager.STREAM_VOICE_CALL,
                                  GlobalVars.AUDIO_SAMPLERATE,
                                  AudioFormat.CHANNEL_OUT_MONO,
                                  AudioFormat.ENCODING_PCM_16BIT,
-                                 GlobalVars.BYTES_PER_ELEMENT *buffSize,
+                                 GlobalVars.BYTES_PER_ELEMENT * GlobalVars.MIN_BUFFER_SIZE,
                                  AudioTrack.MODE_STREAM);
 
         if (_player.getState() != AudioTrack.STATE_INITIALIZED) {
             throw new RuntimeException("AudioTrack.getState() != STATE_INITIALIZED");
         }
 
-        _player.play();
         _player.setPlaybackRate(GlobalVars.AUDIO_SAMPLERATE);
+        _player.play();
 
         while (_isRunning) {
             if (_isSendEnabled == false && _sendBuffer != null) {
