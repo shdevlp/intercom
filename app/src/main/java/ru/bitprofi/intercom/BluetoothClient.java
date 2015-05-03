@@ -78,10 +78,11 @@ public class BluetoothClient extends CommonThreadObject {
                     }
 
                     //Отправляем данные клиенту(если они есть)
-                    if (_isSendEnabled == false && _sendBuffer != null) {
-                        outStream.write(_sendBuffer, 0, _sendBuffer.length);
-                        _sendBuffer = null;
-                        _isSendEnabled = true;
+                    //Отправляем серверу(если они есть)
+                    if (getCount() > 0) {
+                        byte[] buff = _vector.elementAt(0);
+                        outStream.write(buff, 0, buff.length);
+                        _vector.removeElementAt(0);
                     }
                 }
             }

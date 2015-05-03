@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -59,17 +60,21 @@ public class PlaceholderFragment extends Fragment {
                 switch (msg.what) {
                     case GlobalVars.MIC_MSG_DATA:
                         //Данные с микрофона
+                        //Log.d("MIC_MSG_DATA", String.valueOf(data));
+                        _speaker.addData(data);
+                        /*
                         if (GlobalVars.isServer) {
                             _server.setSendData(data);
                         } else {
                             _client.setSendData(data);
                         }
+                        */
                         break;
 
                     case GlobalVars.SERVER_MSG_DATA:
                     case GlobalVars.CLIENT_MSG_DATA:
                         //Данные от сервера или клиента - проигрываем
-                        _speaker.setSendData(data);
+                        //_speaker.setSendData(data);
                         break;
                 }
             }
@@ -166,6 +171,9 @@ public class PlaceholderFragment extends Fragment {
     private void stopEcho() {
         if (_echo != null) {
             _echo.close();
+            while (_echo.isRunning()) {
+                Utils.getInstance().sleep(5);
+            }
             _echo = null;
         }
     }
@@ -174,18 +182,15 @@ public class PlaceholderFragment extends Fragment {
      */
     private void startMicSpeaker() {
         if (_mic == null) {
-            //Включаем микрофон
             _mic = new MicHelper();
             _mic.addReciever(_handler);
             _mic.start();
         }
         if (_speaker == null) {
-            //Включаем динамик
             _speaker = new SpeakerHelper();
-            _speaker.addReciever(_handler);
             _speaker.start();
         }
-    }
+   }
 
     /**
      * Остановка микрофона и динамика
@@ -193,10 +198,16 @@ public class PlaceholderFragment extends Fragment {
     private void stopMicSpeaker() {
         if (_speaker != null) {
             _speaker.close();
+            while (_speaker.isRunning()) {
+                Utils.getInstance().sleep(5);
+            }
             _speaker = null;
         }
         if (_mic != null) {
             _mic.close();
+            while (_mic.isRunning()) {
+                Utils.getInstance().sleep(5);
+            }
             _mic = null;
         }
     }
@@ -220,6 +231,10 @@ public class PlaceholderFragment extends Fragment {
      * Обработка нажатия
      */
     private void btnGoClicked() {
+
+        //stopEcho();
+        //startMicSpeaker();
+
         //Программа уже работает - надо выключить
         if (GlobalVars.currentProgramState == GlobalVars.IS_ON) {
             changeBtnColor(false);

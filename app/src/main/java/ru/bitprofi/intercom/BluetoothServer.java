@@ -107,12 +107,11 @@ public class BluetoothServer extends CommonThreadObject {
                             sendMsg(buffer);
                         }
                     }
-
                     //Отправляем серверу(если они есть)
-                    if (_isSendEnabled == false && _sendBuffer != null) {
-                        outStream.write(_sendBuffer, 0, _sendBuffer.length);
-                        _sendBuffer = null;
-                        _isSendEnabled = true;
+                    if (getCount() > 0) {
+                        byte[] buff = _vector.elementAt(0);
+                        outStream.write(buff, 0, buff.length);
+                        _vector.removeElementAt(0);
                     }
                 }
             } catch (IOException e) {

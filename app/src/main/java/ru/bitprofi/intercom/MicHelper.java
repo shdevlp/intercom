@@ -4,6 +4,7 @@ import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Process;
+import android.util.Log;
 
 /**
  * Created by Дмитрий on 22.04.2015.
@@ -33,9 +34,10 @@ public class MicHelper extends CommonThreadObject {
 
     @Override
     public void run() {
+        android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
+
         _isRunning = true;
 
-        android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
         Utils.getInstance().setMinBufferSize();
 
         _recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
@@ -44,13 +46,16 @@ public class MicHelper extends CommonThreadObject {
                                     AudioFormat.ENCODING_PCM_16BIT,
                                     GlobalVars.BYTES_PER_ELEMENT * GlobalVars.MIN_BUFFER_SIZE);
 
-        if (_recorder.getState() != AudioRecord.STATE_INITIALIZED) {
+        final int state = _recorder.getState();
+        if (state != AudioRecord.STATE_INITIALIZED) {
+            Log.e("MicHelper.run", "AudioRecord.getState() != STATE_INITIALIZED");
             throw new RuntimeException("AudioRecord.getState() != STATE_INITIALIZED");
         }
 
         try {
             _recorder.startRecording();
         } catch(IllegalStateException e) {
+            Log.e("MicHelper.run():startRecording", e.getMessage());
             throw new RuntimeException(e.getMessage());
         }
 

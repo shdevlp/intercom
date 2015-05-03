@@ -6,6 +6,7 @@ import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.os.*;
 import android.os.Process;
+import android.util.Log;
 
 /**
  * Created by Дмитрий on 22.04.2015.
@@ -35,9 +36,10 @@ public class SpeakerHelper extends CommonThreadObject {
 
     @Override
     public void run() {
+        android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
+
         _isRunning = true;
 
-        android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
         Utils.getInstance().setMinBufferSize();
 
         _player = new AudioTrack(AudioManager.STREAM_VOICE_CALL,
@@ -48,18 +50,19 @@ public class SpeakerHelper extends CommonThreadObject {
                                  AudioTrack.MODE_STREAM);
 
         if (_player.getState() != AudioTrack.STATE_INITIALIZED) {
+            Log.e("SpeakerHelper.run", "AudioTrack.getState() != STATE_INITIALIZED");
             throw new RuntimeException("AudioTrack.getState() != STATE_INITIALIZED");
         }
 
         _player.setPlaybackRate(GlobalVars.AUDIO_SAMPLERATE);
         _player.play();
-
         while (_isRunning) {
-            if (_isSendEnabled == false && _sendBuffer != null) {
-                _player.write(_sendBuffer, 0, _sendBuffer.length); //Проигрываем
-                _sendBuffer = null;
-                _isSendEnabled = true; //Разрешаем запись новых данных
+            if (getCount() > 0) {
+                byte[] buff = _vector.elementAt(0);
+                _player.write(buff, 0, buff.length);
+                _vector.removeElementAt(0);
             }
+            Log.d("SpeakerHelper", "run");
         }
     }
 }

@@ -35,7 +35,7 @@ public class Utils {
      * @param message
      * @param okButtonText
      */
-    public void dialog(int title, int message, int okButtonText) {
+    public synchronized void dialog(int title, int message, int okButtonText) {
         AlertDialog.Builder builder1 = new AlertDialog.Builder(GlobalVars.activity);
         Context _context = GlobalVars.context;
         builder1.setTitle(_context.getString(title));
@@ -57,7 +57,7 @@ public class Utils {
      * @param message
      * @param okButtonText
      */
-    public void dialog(String title, String message, String okButtonText) {
+    public synchronized void dialog(String title, String message, String okButtonText) {
         AlertDialog.Builder builder1 = new AlertDialog.Builder(GlobalVars.activity);
         builder1.setTitle(title);
         builder1.setMessage(message);
@@ -79,7 +79,7 @@ public class Utils {
      * @param okButtonText
      * @param cancelButtonText
      */
-    public void dialog(String title, String message, String okButtonText, String cancelButtonText) {
+    public synchronized void dialog(String title, String message, String okButtonText, String cancelButtonText) {
         AlertDialog.Builder builder1 = new AlertDialog.Builder(GlobalVars.activity);
         Context _context = GlobalVars.context;
         builder1.setTitle(title);
@@ -106,7 +106,7 @@ public class Utils {
      * Возвращает новое имя устройство с известным префиксом
      * @return
      */
-    public String getNewDeviceName() {
+    public synchronized String getNewDeviceName() {
         return GlobalVars.PREFIX_DEVICE_NAME + UUID.randomUUID().toString();
     }
 
@@ -115,7 +115,7 @@ public class Utils {
      * @param text
      * @return
      */
-    public boolean setStatusText(final String text) {
+    public synchronized boolean setStatusText(final String text) {
         final TextView status = (TextView)GlobalVars.activity.findViewById(R.id.tvStatus);
         if (status != null) {
             GlobalVars.activity.runOnUiThread(new Runnable() {
@@ -133,7 +133,7 @@ public class Utils {
       * Задержка основного потока
       * @param delay
      */
-    public void sleep(int delay) {
+    public synchronized void sleep(int delay) {
         try {
             Thread.sleep(delay);
         } catch (InterruptedException e) {
@@ -146,7 +146,7 @@ public class Utils {
      * @param buffer
      * @return
      */
-    public byte[] short2byte(short[] buffer) {
+    public synchronized byte[] short2byte(short[] buffer) {
         int size = buffer.length;
         byte[] bytes = new byte[size * 2];
         for (int i = 0; i < size; i++) {
@@ -162,7 +162,7 @@ public class Utils {
      * @param filePath - "/sdcard/voice8K16bitmono.pcm"
      * @param buffer
      */
-    public void writeAudioDataToFile(String filePath, short[] buffer) {
+    public synchronized void writeAudioDataToFile(String filePath, short[] buffer) {
         FileOutputStream os = null;
         try {
             os = new FileOutputStream(filePath);
@@ -188,7 +188,7 @@ public class Utils {
      * @param bluetooth
      * @param newState
      */
-    public void waitBluetoothState(BluetoothHelper bluetooth, boolean newState) {
+    public synchronized void waitBluetoothState(BluetoothHelper bluetooth, boolean newState) {
         while (bluetooth.isEnabled() != newState) {
             Utils.getInstance().sleep(5);
         }
@@ -199,7 +199,7 @@ public class Utils {
      * Проверка возврата функции getMinBufferSize
      * @param buffSize
      */
-    public void checkGetMinBufferSize(int buffSize) {
+    public synchronized void checkGetMinBufferSize(int buffSize) {
         if (buffSize == AudioRecord.ERROR) {
             throw new RuntimeException("AudioRecord.getMinBufferSize() = ERROR");
         }
@@ -212,7 +212,7 @@ public class Utils {
      * Проверка возврата функции AudioRecoder.read
      * @param read
      */
-    public void checkRead(int read) {
+    public synchronized void checkRead(int read) {
         if (read == AudioRecord.ERROR_INVALID_OPERATION) {
             throw new RuntimeException("AudioRecord.read() = ERROR_INVALID_OPERATION");
         }
@@ -225,17 +225,17 @@ public class Utils {
     /**
      * Установка минимального размера буфера
      */
-    public void setMinBufferSize() {
+    public synchronized void setMinBufferSize() {
         if (GlobalVars.MIN_BUFFER_SIZE <= 0) {
             GlobalVars.MIN_BUFFER_SIZE = AudioRecord.getMinBufferSize(GlobalVars.AUDIO_SAMPLERATE,
-                    AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
+                AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
             Utils.getInstance().checkGetMinBufferSize(GlobalVars.MIN_BUFFER_SIZE);
         }
     }
     /**
      * Максимальная громкость
      */
-    public void setMaxVolume() {
+    public synchronized void setMaxVolume() {
         final AudioManager audioManager = (AudioManager) GlobalVars.context
                 .getSystemService(GlobalVars.context.AUDIO_SERVICE);
         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC,
@@ -246,7 +246,7 @@ public class Utils {
     /**
      * Минимальная громкость
      */
-    public void setMinVolume() {
+    public synchronized void setMinVolume() {
         final AudioManager audioManager = (AudioManager) GlobalVars.context
                 .getSystemService(GlobalVars.context.AUDIO_SERVICE);
         final int originalVolume = audioManager
