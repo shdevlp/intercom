@@ -134,14 +134,12 @@ public class PlaceholderFragment extends Fragment {
 
     /**
      * Подключение к серверу
-     * @param key Имя
-     * @param value Адрес
      */
-    private void connectToServer(BluetoothDevice device, String key, String value) {
-        GlobalVars.connectDeviceName = key;
-        GlobalVars.connectDeviceAddrs = value;
+    private void connectToServer(BluetoothDevice device) {
+        GlobalVars.connectDeviceName = device.getName();
+        GlobalVars.connectDeviceAddrs = device.getAddress();
 
-        _client = new BluetoothClient(device, value);
+        _client = new BluetoothClient(device, GlobalVars.connectDeviceAddrs);
         _client.addReciever(_handler);
         _client.start();
     }
@@ -230,11 +228,10 @@ public class PlaceholderFragment extends Fragment {
 
 
     /**
-     * Поиск и подключение к серверу
+     * Поиск сервера
      * @return
      */
-    private boolean findConnectServer() {
-        boolean bFindConnectServer = false;
+    private BluetoothDevice findServer() {
         //В поисках сервера
         for (HashMap.Entry<String, String> entry : _devices.entrySet()) {
             String key = (String) entry.getKey();
@@ -242,17 +239,13 @@ public class PlaceholderFragment extends Fragment {
 
             if (analizeKeyName(key)) {
                 //Нашли сервер, подключаемс к нему
-                bFindConnectServer = true;
                 BluetoothDevice device = _bluetooth.getDevice(value);
-
                 if (device != null) {
-                    GlobalVars.isServer = false;
-                    connectToServer(device, key, value);
+                    return device;
                 }
-                break;
             }
         }
-        return bFindConnectServer;
+        return null;
     }
 
     /**
@@ -300,10 +293,15 @@ public class PlaceholderFragment extends Fragment {
             //Получаем список устройств вокруг
             _devices = _bluetooth.getBluetoothDevices();
 
-            if (!findConnectServer()) {
+            BluetoothDevice dev = findServer();
+            if (dev == null) {
                 //Сервер не найден - значит мы первые
                 GlobalVars.isServer = true;
                 startServer();
+            } else {
+                //Сервер найден, подключаемся к нему
+                GlobalVars.isServer = false;
+                connectToServer(dev);
             }
 
             //Пошел микрофон, динамик

@@ -2,8 +2,17 @@ package ru.bitprofi.intercom;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.support.annotation.NonNull;
+import android.util.Log;
+
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 
@@ -14,24 +23,36 @@ import java.util.Set;
 public class BluetoothHelper {
     private static final int REQUEST_ENABLE_BT = 0;
     private static final int REQUEST_DISCOVERABLE_BT = 0;
-
+    private Set<BluetoothDevice> _devices;
     private BluetoothAdapter _ba;
+
+    private final BroadcastReceiver receiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                _devices.add(device);
+            }
+        }
+    };
 
     public BluetoothHelper() {
         _ba = BluetoothAdapter.getDefaultAdapter();
+        _devices = new HashSet<BluetoothDevice>();
+
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        GlobalVars.activity.registerReceiver(receiver, filter); // Don't forget to unregister during onDestroy
     }
+
 
     /**
      * Сделать устройство доступным для поиска других устройств
-     * @return
      */
-    public boolean makeDiscoverable() {
-        if (_ba.isDiscovering()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-            GlobalVars.activity.startActivityForResult(enableBtIntent, REQUEST_DISCOVERABLE_BT);
-            return true;
-        }
-        return false;
+    public void makeDiscoverable() {
+        Intent discoverableIntent = new
+                Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 3600);
+        GlobalVars.activity.startActivityForResult(discoverableIntent, 0);
     }
 
     /**
@@ -63,6 +84,12 @@ public class BluetoothHelper {
             }
         }
         return null;
+    }
+
+    public void discoveryDevices() {
+        _ba.startDiscovery();
+
+
     }
 
     /**
