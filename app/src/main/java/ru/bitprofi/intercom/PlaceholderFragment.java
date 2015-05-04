@@ -196,19 +196,20 @@ public class PlaceholderFragment extends Fragment {
      * Остановка микрофона и динамика
      */
     private void stopMicSpeaker() {
-        if (_speaker != null) {
-            _speaker.close();
-            while (_speaker.isRunning()) {
-                Utils.getInstance().sleep(5);
-            }
-            _speaker = null;
-        }
         if (_mic != null) {
             _mic.close();
             while (_mic.isRunning()) {
-                Utils.getInstance().sleep(5);
+                Utils.getInstance().sleep(10);
             }
             _mic = null;
+        }
+
+        if (_speaker != null) {
+            _speaker.close();
+            while (_speaker.isRunning()) {
+                Utils.getInstance().sleep(10);
+            }
+            _speaker = null;
         }
     }
 
@@ -227,27 +228,50 @@ public class PlaceholderFragment extends Fragment {
         }
     }
 
+
+    /**
+     * Поиск и подключение к серверу
+     * @return
+     */
+    private boolean findConnectServer() {
+        boolean bFindConnectServer = false;
+        //В поисках сервера
+        for (HashMap.Entry<String, String> entry : _devices.entrySet()) {
+            String key = (String) entry.getKey();
+            String value = (String) entry.getValue();
+
+            if (analizeKeyName(key)) {
+                //Нашли сервер, подключаемс к нему
+                bFindConnectServer = true;
+                BluetoothDevice device = _bluetooth.getDevice(value);
+
+                if (device != null) {
+                    GlobalVars.isServer = false;
+                    connectToServer(device, key, value);
+                }
+                break;
+            }
+        }
+        return bFindConnectServer;
+    }
+
     /**
      * Обработка нажатия
      */
     private void btnGoClicked() {
-
-        //stopEcho();
-        //startMicSpeaker();
-
         //Программа уже работает - надо выключить
         if (GlobalVars.currentProgramState == GlobalVars.IS_ON) {
             changeBtnColor(false);
+
+            stopServerOrClient();
+            stopMicSpeaker();
+            startEcho();
 
             if (_bluetooth.isEnabled()) {
                 _bluetooth.turnOff();
                 //Ждем выключения bluetooth
                 Utils.getInstance().waitBluetoothState(_bluetooth, false);
             }
-
-            stopServerOrClient();
-            stopMicSpeaker();
-            startEcho();
 
             GlobalVars.currentProgramState = GlobalVars.IS_OFF;
             return;
@@ -276,26 +300,7 @@ public class PlaceholderFragment extends Fragment {
             //Получаем список устройств вокруг
             _devices = _bluetooth.getBluetoothDevices();
 
-            boolean bFindServer = false;
-            //В поисках сервера
-            for (HashMap.Entry<String, String> entry : _devices.entrySet()) {
-                String key = (String) entry.getKey();
-                String value = (String) entry.getValue();
-
-                if (analizeKeyName(key)) {
-                    //Нашли сервер, подключаемс к нему
-                    bFindServer = true;
-                    BluetoothDevice device = _bluetooth.getDevice(value);
-
-                    if (device != null) {
-                        GlobalVars.isServer = false;
-                        connectToServer(device, key, value);
-                    }
-                    break;
-                }
-            }
-
-            if (!bFindServer) {
+            if (!findConnectServer()) {
                 //Сервер не найден - значит мы первые
                 GlobalVars.isServer = true;
                 startServer();
@@ -303,7 +308,6 @@ public class PlaceholderFragment extends Fragment {
 
             //Пошел микрофон, динамик
             startMicSpeaker();
-
             //Новый статус у приложения
             GlobalVars.currentProgramState = GlobalVars.IS_ON;
             return;

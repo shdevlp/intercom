@@ -27,9 +27,9 @@ public class SpeakerHelper extends CommonThreadObject {
     public void close() {
         super.close();
         if (null != _player) {
-            _player.stop();
-            _player.release();
-            _player = null;
+             _player.stop();
+             _player.release();
+             _player = null;
         }
     }
 
@@ -56,11 +56,12 @@ public class SpeakerHelper extends CommonThreadObject {
 
         _player.setPlaybackRate(GlobalVars.AUDIO_SAMPLERATE);
         _player.play();
+
         while (_isRunning) {
             if (getCount() > 0) {
                 byte[] buff = _vector.elementAt(0);
-                _player.write(buff, 0, buff.length);
-                _vector.removeElementAt(0);
+                 _player.write(buff, 0, buff.length);
+                 _vector.removeElementAt(0);
             }
             Log.d("SpeakerHelper", "run");
         }

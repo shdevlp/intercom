@@ -84,7 +84,11 @@ public class CommonThreadObject extends Thread {
      * @param data
      */
     protected void sendMsg(byte[] data) {
-        for(Handler handler: _recievers) {
+        if (_recievers == null || data == null) {
+            return;
+        }
+
+        for (Handler handler: _recievers) {
             handler.sendMessage(handler.obtainMessage(_msgType, data));
         }
     }
