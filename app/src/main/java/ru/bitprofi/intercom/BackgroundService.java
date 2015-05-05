@@ -61,28 +61,48 @@ public class BackgroundService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        //Максимальная громкость
-        Utils.getInstance().setMaxVolume();
-
         GlobalVars.currentDeviceName = Utils.getInstance().getNewDeviceName();
+        GlobalVars.oldDeviceName = _bluetooth.getName();
+        GlobalVars.currentAddress = _bluetooth.getAddress();
 
         //Ждем включения bluetooth
         if (!_bluetooth.isEnabled()) {
             _bluetooth.turnOn();
-            Utils.getInstance().waitBluetoothState(_bluetooth, true);
+            while (!_bluetooth.isEnabled()) {
+                ;
+            }
         }
 
-        //Запоминаем адрес Bluetooth
-        GlobalVars.currentAddress = _bluetooth.getAddress();
-        //Запоминаем старое имя
-        GlobalVars.oldDeviceName = _bluetooth.getName();
-        //Меняем на новое имя
         _bluetooth.changeDeviceName(GlobalVars.currentDeviceName);
-        //Делаем доступным для обнаружения
         _bluetooth.makeDiscoverable();
-        //Получаем список устройств вокруг
+
+        GlobalVars.isBluetoothDiscoveryFinished = false;
         _bluetooth.startDiscovery();
-        //Получаем результат
+
+        Thread th = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                int count = 0;
+                while (true) {
+                    if (GlobalVars.isBluetoothDiscoveryFinished) {
+                        break;
+                    }
+                    count++;
+                    Utils.getInstance().sleep(1);
+                    //Ждем 12 секунд
+                    if (count > 12000) {
+                        break;
+                    }
+                }
+            }
+        });
+        th.start();
+
+        if (!GlobalVars.isBluetoothDiscoveryFinished) {
+            return 0;
+        }
+
+        //Получаем список устройств вокруг
         _devices = _bluetooth.getDescoveredDevices();
 
         BluetoothDevice dev = findServer();
@@ -98,21 +118,29 @@ public class BackgroundService extends Service {
 
         //Пошел микрофон, динамик
         startMicSpeaker();
+
         //Новый статус у приложения
         GlobalVars.currentProgramState = GlobalVars.IS_ON;
+
+        //Максимальная громкость
+        Utils.getInstance().setMaxVolume();
 
         return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
     public void onDestroy() {
+        Utils.getInstance().setNormalVolume();
+
         stopServerOrClient();
         stopMicSpeaker();
 
         if (_bluetooth.isEnabled()) {
             _bluetooth.turnOff();
             //Ждем выключения bluetooth
-            Utils.getInstance().waitBluetoothState(_bluetooth, false);
+            while (_bluetooth.isEnabled()) {
+                ;
+            }
         }
 
         GlobalVars.currentProgramState = GlobalVars.IS_OFF;

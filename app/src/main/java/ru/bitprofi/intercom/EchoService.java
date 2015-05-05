@@ -20,6 +20,7 @@ public class EchoService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Utils.getInstance().setMaxVolume();
         return super.onStartCommand(intent, flags, startId);
     }
 

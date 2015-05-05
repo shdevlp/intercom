@@ -1,8 +1,13 @@
 package ru.bitprofi.intercom;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.util.Log;
 
 /**
  * Created by Дмитрий on 22.04.2015.
@@ -14,6 +19,10 @@ public class GlobalVars {
     public static final int IS_ON = 1;
     public static final int IS_OFF = 0;
     public static volatile int currentProgramState = 0;
+
+    public static volatile int oldAudioMode =AudioManager.MODE_NORMAL;
+    public static volatile int oldRingerMode = AudioManager.RINGER_MODE_NORMAL;
+    public static volatile boolean isSpeakerPhoneOn = false;
 
     public static volatile String currentDeviceName  = null;  //Текущее имя Bluetooth устройства
     public static volatile String oldDeviceName      = null;  //Старое имя Bluetooth устройства
@@ -37,4 +46,6 @@ public class GlobalVars {
 
     public static final String PREFIX_DEVICE_NAME = "INTERCOM_"; //Префикс для Bluetooth устройств
     public static final int AUDIO_SAMPLERATE = 44100; //Дискретизация звука
+
+    public static volatile boolean isBluetoothDiscoveryFinished = false; //Поиск устройств закончен
 }

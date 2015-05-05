@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
+import android.provider.MediaStore;
 import android.widget.TextView;
 
 import java.io.FileNotFoundException;
@@ -111,6 +112,27 @@ public class Utils {
     }
 
     /**
+     * Добавить текст в статус
+     * @param text
+     * @return
+     */
+    public synchronized boolean addStatusText(final String text) {
+        final TextView status = (TextView)GlobalVars.activity.findViewById(R.id.tvStatus);
+        if (status != null) {
+            GlobalVars.activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    String txt = status.getText().toString();
+                    txt = text + "\n" + txt;
+                    status.setText(txt);
+                }
+            });
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Установить строку статуса
      * @param text
      * @return
@@ -184,18 +206,6 @@ public class Utils {
     }
 
     /**
-     * Ждет установления нового статуса у Bluetooth
-     * @param bluetooth
-     * @param newState
-     */
-    public synchronized void waitBluetoothState(BluetoothHelper bluetooth, boolean newState) {
-        while (bluetooth.isEnabled() != newState) {
-            Utils.getInstance().sleep(5);
-        }
-        Utils.getInstance().sleep(100);
-    }
-
-    /**
      * Проверка возврата функции getMinBufferSize
      * @param buffSize
      */
@@ -232,26 +242,32 @@ public class Utils {
             Utils.getInstance().checkGetMinBufferSize(GlobalVars.MIN_BUFFER_SIZE);
         }
     }
+
+    /**
+     * Нормальная громкость
+     */
+    public synchronized void setNormalVolume() {
+        final AudioManager audioManager = (AudioManager) GlobalVars.context
+                .getSystemService(GlobalVars.context.AUDIO_SERVICE);
+
+        audioManager.setSpeakerphoneOn(GlobalVars.isSpeakerPhoneOn);
+        audioManager.setMode(GlobalVars.oldAudioMode);
+        audioManager.setRingerMode(GlobalVars.oldRingerMode);
+    }
+
     /**
      * Максимальная громкость
      */
     public synchronized void setMaxVolume() {
         final AudioManager audioManager = (AudioManager) GlobalVars.context
                 .getSystemService(GlobalVars.context.AUDIO_SERVICE);
-        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC,
-                audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC), 0);
-        audioManager.setSpeakerphoneOn(true);
-    }
 
-    /**
-     * Минимальная громкость
-     */
-    public synchronized void setMinVolume() {
-        final AudioManager audioManager = (AudioManager) GlobalVars.context
-                .getSystemService(GlobalVars.context.AUDIO_SERVICE);
-        final int originalVolume = audioManager
-                .getStreamVolume(AudioManager.STREAM_MUSIC);
-        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalVolume, 0);
-        audioManager.setSpeakerphoneOn(false);
+        GlobalVars.oldAudioMode = audioManager.getMode();
+        GlobalVars.oldRingerMode = audioManager.getRingerMode();
+        GlobalVars.isSpeakerPhoneOn = audioManager.isSpeakerphoneOn();
+
+        audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+        audioManager.setMode(AudioManager.MODE_NORMAL);
+        audioManager.setSpeakerphoneOn(true);
     }
 }

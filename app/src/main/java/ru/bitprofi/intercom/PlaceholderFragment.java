@@ -31,7 +31,7 @@ public class PlaceholderFragment extends Fragment {
     private ProgressBar _progressBar;  //Показывает длительность процесса
 
     private Intent _mainService; //Фоновая служба
-    private Intent _echoService; //Эхо служба
+    //private Intent _echoService; //Эхо служба
 
     private Context _context;    //Текущий контекст
 
@@ -43,9 +43,9 @@ public class PlaceholderFragment extends Fragment {
 
         _context = PlaceholderFragment.this.getActivity();
         _mainService = new Intent(_context, BackgroundService.class);
-        _echoService = new Intent(_context, EchoService.class);
+        //_echoService = new Intent(_context, EchoService.class);
 
-        _context.startService(_echoService);
+        //_context.startService(_echoService);
 
         return rootView;
     }
@@ -97,13 +97,13 @@ public class PlaceholderFragment extends Fragment {
         if (GlobalVars.currentProgramState == GlobalVars.IS_ON) {
             changeBtnColor(false);
             _context.stopService(_mainService);
-            _context.startService(_echoService);
+            //_context.startService(_echoService);
             return;
         }
 
         //Включаем работу
         if (GlobalVars.currentProgramState == GlobalVars.IS_OFF) {
-            _context.stopService(_echoService);
+            //_context.stopService(_echoService);
             changeBtnColor(true);
             _context.startService(_mainService);
             return;

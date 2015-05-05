@@ -22,18 +22,35 @@ import java.util.Set;
  */
 public class BluetoothHelper {
     private static final int BT_REQUEST_ENABLE = 0;
-    private static final int BT_DISCOVERABLE_DURATION = 3600;
+    private static final int BT_DISCOVERABLE_DURATION = 600;
 
     private Set<BluetoothDevice> _devices; //Обнаруженные устройства для подключенния
     private BluetoothAdapter _ba;
 
+    //Нашел Bluetooth устройство
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 _devices.add(device);
+                Utils.getInstance().addStatusText(device.getName()+":"+device.getAddress());
             }
+            if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)) {
+                GlobalVars.isBluetoothDiscoveryFinished = false;
+                Utils.getInstance().addStatusText("Начал поиск устройств...");
+            } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
+                GlobalVars.isBluetoothDiscoveryFinished = true;
+                Utils.getInstance().addStatusText("Закончил поиск устройств");
+            }
+        }
+    };
+
+    //Обнаруживает начало и конец поиска устройств
+    private final BroadcastReceiver discoveryReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
         }
     };
 
@@ -41,8 +58,13 @@ public class BluetoothHelper {
         _ba = BluetoothAdapter.getDefaultAdapter();
         _devices = new HashSet<BluetoothDevice>();
 
-        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-        GlobalVars.activity.registerReceiver(receiver, filter);
+        IntentFilter filterFound = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        IntentFilter filterStart = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
+        IntentFilter filterFinish = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+
+        GlobalVars.activity.registerReceiver(receiver, filterFound);
+        GlobalVars.activity.registerReceiver(receiver, filterStart);
+        GlobalVars.activity.registerReceiver(receiver, filterFinish);
     }
 
     /**
@@ -112,13 +134,16 @@ public class BluetoothHelper {
      * Старт обнаружения устройств
      */
     public void startDiscovery() {
-        _ba.startDiscovery();
-        //Ждем 12 секунд - максимальное время для обнаружения устройств
-        for (int sec = 0; sec < 12; sec++) {
-            //По 5 милисекунд
-            for (int msec = 0; msec < 200; msec++) {
-                Utils.getInstance().sleep(5);
+        if (_ba.isDiscovering()){
+            _ba.cancelDiscovery();
+            while (_ba.isDiscovering()) {
+                ;
             }
+        }
+        _ba.startDiscovery();
+        boolean b = _ba.isDiscovering();
+        while (b != true) {
+            b = _ba.isDiscovering();
         }
     }
 
