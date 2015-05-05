@@ -44,7 +44,6 @@ public class PlaceholderFragment extends Fragment {
         _context = PlaceholderFragment.this.getActivity();
         _mainService = new Intent(_context, BackgroundService.class);
         //_echoService = new Intent(_context, EchoService.class);
-
         //_context.startService(_echoService);
 
         return rootView;
@@ -93,20 +92,22 @@ public class PlaceholderFragment extends Fragment {
      * Обработка нажатия
      */
     private void btnGoClicked() {
+        _btnGo.setEnabled(false);
+
         //Программа уже работает - надо выключить
         if (GlobalVars.currentProgramState == GlobalVars.IS_ON) {
             changeBtnColor(false);
             _context.stopService(_mainService);
-            //_context.startService(_echoService);
             return;
         }
 
         //Включаем работу
         if (GlobalVars.currentProgramState == GlobalVars.IS_OFF) {
-            //_context.stopService(_echoService);
             changeBtnColor(true);
             _context.startService(_mainService);
             return;
         }
+
+        _btnGo.setEnabled(true);
    }
 }

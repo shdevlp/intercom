@@ -7,12 +7,15 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.provider.MediaStore;
+import android.widget.Button;
 import android.widget.TextView;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.UUID;
+
+import at.markushi.ui.CircleButton;
 
 /**
  * Created by Дмитрий on 24.04.2015.
@@ -109,6 +112,25 @@ public class Utils {
      */
     public synchronized String getNewDeviceName() {
         return GlobalVars.PREFIX_DEVICE_NAME + UUID.randomUUID().toString();
+    }
+
+    /**
+     * Установить цвет кнопки
+     * @param color
+     * @return
+     */
+    public synchronized boolean setBtnColor(final int color) {
+        final CircleButton btn = (CircleButton)GlobalVars.activity.findViewById(R.id.btnGo);
+        if (btn != null) {
+            GlobalVars.activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    btn.setColor(color);
+                }
+            });
+            return true;
+        }
+        return false;
     }
 
     /**

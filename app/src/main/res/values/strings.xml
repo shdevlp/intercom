@@ -12,7 +12,12 @@
     <string name="dialog_cancel">Отмена</string>
     <string name="dialog_title">Информация</string>
     <string name="something_went_wrong">Что то пошло не так</string>
+
     <string name="error_connected">Ошибка подключения</string>
+
+    <string name="bt_find_devices">Поиск устройств</string>
+    <string name="bt_find_devices_finish">Поиск устройств закончен</string>
+
 
     <string name="server_is_connected">Есть подключение</string>
     <string name="server_wait_connection">Сервер ждет подключения</string>

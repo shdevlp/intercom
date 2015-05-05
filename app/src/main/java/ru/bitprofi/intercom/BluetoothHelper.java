@@ -34,14 +34,18 @@ public class BluetoothHelper {
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 _devices.add(device);
-                Utils.getInstance().addStatusText(device.getName()+":"+device.getAddress());
+                Utils.getInstance().addStatusText(device.getName()+" : "+device.getAddress());
+                return;
             }
             if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)) {
                 GlobalVars.isBluetoothDiscoveryFinished = false;
-                Utils.getInstance().addStatusText("Начал поиск устройств...");
+                _devices.clear();
+                Utils.getInstance().addStatusText(GlobalVars.activity.getString(R.string.bt_find_devices));
+                return;
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 GlobalVars.isBluetoothDiscoveryFinished = true;
-                Utils.getInstance().addStatusText("Закончил поиск устройств");
+                Utils.getInstance().addStatusText(GlobalVars.activity.getString(R.string.bt_find_devices_finish));
+                return;
             }
         }
     };
