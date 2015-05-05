@@ -21,9 +21,10 @@ import java.util.Set;
  * Created by Дмитрий on 22.04.2015.
  */
 public class BluetoothHelper {
-    private static final int REQUEST_ENABLE_BT = 0;
-    private static final int REQUEST_DISCOVERABLE_BT = 0;
-    private Set<BluetoothDevice> _devices;
+    private static final int BT_REQUEST_ENABLE = 0;
+    private static final int BT_DISCOVERABLE_DURATION = 3600;
+
+    private Set<BluetoothDevice> _devices; //Обнаруженные устройства для подключенния
     private BluetoothAdapter _ba;
 
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
@@ -41,9 +42,15 @@ public class BluetoothHelper {
         _devices = new HashSet<BluetoothDevice>();
 
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-        GlobalVars.activity.registerReceiver(receiver, filter); // Don't forget to unregister during onDestroy
+        GlobalVars.activity.registerReceiver(receiver, filter);
     }
 
+    /**
+     *
+     */
+    public void close() {
+        GlobalVars.activity.unregisterReceiver(receiver);
+    }
 
     /**
      * Сделать устройство доступным для поиска других устройств
@@ -51,21 +58,36 @@ public class BluetoothHelper {
     public void makeDiscoverable() {
         Intent discoverableIntent = new
                 Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 3600);
+        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION,
+                BT_DISCOVERABLE_DURATION);
         GlobalVars.activity.startActivityForResult(discoverableIntent, 0);
     }
 
     /**
-      * Ищем устройства
+      * Выдает список ранее сопряженных устройств
       * @return Map<name, address>
      */
-    public HashMap<String, String> getBluetoothDevices() {
-        _ba.startDiscovery();
-
+    public HashMap<String, String> getBoundedDevices() {
         Set<BluetoothDevice> pairedDevices = _ba.getBondedDevices();
         HashMap map = new HashMap<String, String>();
 
         for (BluetoothDevice bt : pairedDevices) {
+            map.put(bt.getName(), bt.getAddress());
+        }
+        return map;
+    }
+
+    /**
+     * Выдает список заново обнаруженных устройств
+     * @return
+     */
+    public HashMap<String, String> getDescoveredDevices() {
+        if (_devices.size() == 0) {
+            return null;
+        }
+
+        HashMap map = new HashMap<String, String>();
+        for (BluetoothDevice bt : _devices) {
             map.put(bt.getName(), bt.getAddress());
         }
         return map;
@@ -86,10 +108,18 @@ public class BluetoothHelper {
         return null;
     }
 
-    public void discoveryDevices() {
+    /**
+     * Старт обнаружения устройств
+     */
+    public void startDiscovery() {
         _ba.startDiscovery();
-
-
+        //Ждем 12 секунд - максимальное время для обнаружения устройств
+        for (int sec = 0; sec < 12; sec++) {
+            //По 5 милисекунд
+            for (int msec = 0; msec < 200; msec++) {
+                Utils.getInstance().sleep(5);
+            }
+        }
     }
 
     /**
@@ -111,7 +141,7 @@ public class BluetoothHelper {
         }
        if (!_ba.isEnabled()) {
             Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            GlobalVars.activity.startActivityForResult(turnOn, REQUEST_ENABLE_BT);
+            GlobalVars.activity.startActivityForResult(turnOn, BT_REQUEST_ENABLE);
        }
     }
 
