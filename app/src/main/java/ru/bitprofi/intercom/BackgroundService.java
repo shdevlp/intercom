@@ -61,7 +61,11 @@ public class BackgroundService extends Service {
                     case GlobalVars.SERVER_MSG_DATA:
                     case GlobalVars.CLIENT_MSG_DATA:
                         //Данные от сервера или клиента - проигрываем
-                        _speaker.addData(data);
+                        if (_speaker != null) {
+                            if (_speaker.isRunning()) {
+                                _speaker.addData(data);
+                            }
+                        }
                         break;
                 }
             }
