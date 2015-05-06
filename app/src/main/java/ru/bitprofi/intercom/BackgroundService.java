@@ -44,12 +44,16 @@ public class BackgroundService extends Service {
                     case GlobalVars.MIC_MSG_DATA:
                         //Данные с микрофона передаем
                         if (GlobalVars.isServer) {
-                            if (_server.isRunning()) {
-                                _server.addData(data);
+                            if (_server != null) {
+                                if (_server.isRunning()) {
+                                    _server.addData(data);
+                                }
                             }
                         } else {
-                            if (_client.isRunning()) {
-                                _client.addData(data);
+                            if (_client != null) {
+                                if (_client.isRunning()) {
+                                    _client.addData(data);
+                                }
                             }
                         }
                         break;
@@ -71,7 +75,6 @@ public class BackgroundService extends Service {
         GlobalVars.oldDeviceName = _bluetooth.getName();
         GlobalVars.currentAddress = _bluetooth.getAddress();
 
-        //Utils.getInstance().addStatusText(GlobalVars.context.getString(R.string.bt_wait_on));
         //Ждем включения bluetooth
         if (!_bluetooth.isEnabled()) {
             _bluetooth.turnOn();

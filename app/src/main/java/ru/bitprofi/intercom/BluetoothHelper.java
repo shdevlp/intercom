@@ -97,6 +97,7 @@ public class BluetoothHelper {
 
         HashMap map = new HashMap<String, String>();
         for (BluetoothDevice bt : _devices) {
+            Utils.getInstance().addStatusText(bt.getName() + " : "+ bt.getAddress());
             map.put(bt.getName(), bt.getAddress());
         }
         return map;
