@@ -59,11 +59,9 @@ public class SpeakerHelper extends CommonThreadObject {
 
         while (_isRunning) {
             if (getCount() > 0) {
-                synchronized (this) {
-                    byte[] buff = _vector.elementAt(0);
-                    _player.write(buff, 0, buff.length);
-                    _vector.removeElementAt(0);
-                }
+                byte[] buff = _vector.elementAt(0);
+                _player.write(buff, 0, buff.length);
+                _vector.removeElementAt(0);
             }
         }
     }

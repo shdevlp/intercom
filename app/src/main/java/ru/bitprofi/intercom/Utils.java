@@ -1,6 +1,8 @@
 package ru.bitprofi.intercom;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.media.AudioFormat;
@@ -131,6 +133,32 @@ public class Utils {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Ждет и показывает анимацию пока не закончится поиск устройств
+     */
+    public void waitScreenBTDiscovery() {
+        GlobalVars.activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                final ProgressDialog dialog = ProgressDialog.show(GlobalVars.contextFragment,
+                        GlobalVars.contextFragment.getString(R.string.wait),
+                        GlobalVars.contextFragment.getString(R.string.bt_find_devices), true);
+                Thread th = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        while (true) {
+                            if (GlobalVars.isBluetoothDiscoveryFinished) {
+                                dialog.dismiss();
+                                break;
+                            }
+                        }
+                    }
+                });
+                th.start();
+            }
+        });
     }
 
     /**

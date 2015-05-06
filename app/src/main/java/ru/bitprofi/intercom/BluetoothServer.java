@@ -35,7 +35,7 @@ public class BluetoothServer extends CommonThreadObject {
 
             _serverSocket = _ba.listenUsingRfcommWithServiceRecord(name, uuid);
 
-            Utils.getInstance().setStatusText(GlobalVars.activity.getString(
+            Utils.getInstance().addStatusText(GlobalVars.activity.getString(
                     R.string.server_wait_connection));
         } catch (IOException e) {
             // TODO Auto-generated catch block
@@ -87,7 +87,7 @@ public class BluetoothServer extends CommonThreadObject {
                         remoteDevice.getName() + "\n" + remoteDevice.getAddress();
 
                 //Есть подключение
-                Utils.getInstance().setStatusText(strConnected);
+                Utils.getInstance().addStatusText(strConnected);
 
                 _serverSocket.close();
 
@@ -117,12 +117,12 @@ public class BluetoothServer extends CommonThreadObject {
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
-                Utils.getInstance().setStatusText(GlobalVars.activity.getString(
+                Utils.getInstance().addStatusText(GlobalVars.activity.getString(
                         R.string.something_went_wrong) + e.getMessage());
             }
         }else{
             _isRunning = false;
-            Utils.getInstance().setStatusText(GlobalVars.activity.getString(
+            Utils.getInstance().addStatusText(GlobalVars.activity.getString(
                     R.string.server_close));
         }
     }

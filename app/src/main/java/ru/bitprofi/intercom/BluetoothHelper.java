@@ -6,13 +6,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.support.annotation.NonNull;
-import android.util.Log;
-
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 
@@ -21,7 +16,6 @@ import java.util.Set;
  * Created by Дмитрий on 22.04.2015.
  */
 public class BluetoothHelper {
-    private static final int BT_REQUEST_ENABLE = 0;
     private static final int BT_DISCOVERABLE_DURATION = 600;
 
     private Set<BluetoothDevice> _devices; //Обнаруженные устройства для подключенния
@@ -34,27 +28,16 @@ public class BluetoothHelper {
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 _devices.add(device);
-                Utils.getInstance().addStatusText(device.getName()+" : "+device.getAddress());
                 return;
             }
             if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)) {
                 GlobalVars.isBluetoothDiscoveryFinished = false;
                 _devices.clear();
-                Utils.getInstance().addStatusText(GlobalVars.activity.getString(R.string.bt_find_devices));
                 return;
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 GlobalVars.isBluetoothDiscoveryFinished = true;
-                Utils.getInstance().addStatusText(GlobalVars.activity.getString(R.string.bt_find_devices_finish));
                 return;
             }
-        }
-    };
-
-    //Обнаруживает начало и конец поиска устройств
-    private final BroadcastReceiver discoveryReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-
         }
     };
 
@@ -138,17 +121,13 @@ public class BluetoothHelper {
      * Старт обнаружения устройств
      */
     public void startDiscovery() {
-        if (_ba.isDiscovering()){
+        if (_ba.isDiscovering()) {
             _ba.cancelDiscovery();
             while (_ba.isDiscovering()) {
                 ;
             }
         }
         _ba.startDiscovery();
-        boolean b = _ba.isDiscovering();
-        while (b != true) {
-            b = _ba.isDiscovering();
-        }
     }
 
     /**
@@ -164,13 +143,15 @@ public class BluetoothHelper {
      */
     public void turnOn() {
         if (_ba == null) {
-            Utils.getInstance().dialog(R.string.dialog_title,
-                    R.string.bluetooth_not_supported, R.string.dialog_ok);
+            Utils.getInstance().dialog(R.string.information,
+                    R.string.bt_not_supported, R.string.ok);
             return;
         }
        if (!_ba.isEnabled()) {
-            Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            GlobalVars.activity.startActivityForResult(turnOn, BT_REQUEST_ENABLE);
+           _ba.enable();
+           while (!_ba.isEnabled()) {
+               ;
+           }
        }
     }
 
@@ -202,12 +183,12 @@ public class BluetoothHelper {
      * Выключить Bluetooth
      */
     public void turnOff() {
-        String old = GlobalVars.oldDeviceName;
-        changeDeviceName(old);
-        Utils.getInstance().sleep(100);
-        _ba.disable();
-        Utils.getInstance().dialog(R.string.dialog_title,
-                     R.string.bluetooth_turn_off, R.string.dialog_ok);
+        if (_ba.isEnabled()) {
+            _ba.disable();
+            while (_ba.isEnabled()) {
+                ;
+            }
+        }
     }
 
     /**
@@ -217,5 +198,4 @@ public class BluetoothHelper {
     public boolean isEnabled() {
         return _ba.isEnabled();
     }
-
 }

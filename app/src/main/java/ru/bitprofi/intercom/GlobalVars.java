@@ -14,13 +14,14 @@ import android.util.Log;
  */
 public class GlobalVars {
     public static volatile Context  context  = null;
+    public static volatile Context  contextFragment  = null;
     public static volatile Activity activity = null;
 
     public static final int IS_ON = 1;
     public static final int IS_OFF = 0;
     public static volatile int currentProgramState = 0;
 
-    public static volatile int oldAudioMode =AudioManager.MODE_NORMAL;
+    public static volatile int oldAudioMode = AudioManager.MODE_NORMAL;
     public static volatile int oldRingerMode = AudioManager.RINGER_MODE_NORMAL;
     public static volatile boolean isSpeakerPhoneOn = false;
 
@@ -47,5 +48,5 @@ public class GlobalVars {
     public static final String PREFIX_DEVICE_NAME = "INTERCOM_"; //Префикс для Bluetooth устройств
     public static final int AUDIO_SAMPLERATE = 44100; //Дискретизация звука
 
-    public static volatile boolean isBluetoothDiscoveryFinished = false; //Поиск устройств закончен
+    public static volatile Boolean isBluetoothDiscoveryFinished = false; //Поиск устройств закончен
 }

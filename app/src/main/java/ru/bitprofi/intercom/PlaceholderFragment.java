@@ -33,16 +33,14 @@ public class PlaceholderFragment extends Fragment {
     private Intent _mainService; //Фоновая служба
     //private Intent _echoService; //Эхо служба
 
-    private Context _context;    //Текущий контекст
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         prepeareForWork(rootView);
 
-        _context = PlaceholderFragment.this.getActivity();
-        _mainService = new Intent(_context, BackgroundService.class);
+        GlobalVars.contextFragment = PlaceholderFragment.this.getActivity();
+        _mainService = new Intent(GlobalVars.contextFragment, BackgroundService.class);
         //_echoService = new Intent(_context, EchoService.class);
         //_context.startService(_echoService);
 
@@ -92,22 +90,18 @@ public class PlaceholderFragment extends Fragment {
      * Обработка нажатия
      */
     private void btnGoClicked() {
-        _btnGo.setEnabled(false);
-
         //Программа уже работает - надо выключить
         if (GlobalVars.currentProgramState == GlobalVars.IS_ON) {
             changeBtnColor(false);
-            _context.stopService(_mainService);
+            GlobalVars.contextFragment.stopService(_mainService);
             return;
         }
 
         //Включаем работу
         if (GlobalVars.currentProgramState == GlobalVars.IS_OFF) {
             changeBtnColor(true);
-            _context.startService(_mainService);
+            GlobalVars.contextFragment.startService(_mainService);
             return;
         }
-
-        _btnGo.setEnabled(true);
    }
 }

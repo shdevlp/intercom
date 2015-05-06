@@ -37,7 +37,9 @@ public class CommonThreadObject extends Thread {
      * @param data
      */
     protected void addData(byte[] data) {
-        _vector.add(data);
+        if (_vector != null) {
+            _vector.add(data);
+        }
     }
 
     /**
@@ -45,7 +47,11 @@ public class CommonThreadObject extends Thread {
      * @return
      */
     protected int getCount() {
-        return _vector.size();
+        if (_vector != null) {
+            return _vector.size();
+        }
+
+        return -1;
     }
 
     /**
@@ -54,7 +60,12 @@ public class CommonThreadObject extends Thread {
      * @return
      */
     protected byte[] getData(int index) {
-        return _vector.elementAt(index);
+        if (_vector != null) {
+            if (index < _vector.size()) {
+                return _vector.elementAt(index);
+            }
+        }
+        return null;
     }
 
     /**
@@ -69,10 +80,15 @@ public class CommonThreadObject extends Thread {
      */
     protected void close() {
         _isRunning = false;
-        _vector.removeAllElements();
-        _vector = null;
+        _vector.clear();
+        if (_vector.size() == 0) {
+            _vector = null;
+        }
+
         _recievers.clear();
-        _recievers = null;
+        if (_recievers.size() == 0) {
+            _recievers = null;
+        }
     }
 
     /**

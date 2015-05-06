@@ -1,10 +1,14 @@
 package ru.bitprofi.intercom;
 
+import android.app.ProgressDialog;
 import android.app.Service;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
+import android.provider.Settings;
+import android.util.Log;
 
 import java.util.HashMap;
 
@@ -22,6 +26,7 @@ public class BackgroundService extends Service {
 
     private MicHelper     _mic;     //Микрофон
     private SpeakerHelper _speaker; //Динамик
+    private ConThread  _conThread;
 
     private Handler _handler;       //Обработчик
 
@@ -29,6 +34,7 @@ public class BackgroundService extends Service {
     @Override
     public void onCreate() {
         _bluetooth = new BluetoothHelper();
+        _conThread = null;
 
         _handler = new Handler() {
             public void handleMessage(android.os.Message msg) {
@@ -36,22 +42,22 @@ public class BackgroundService extends Service {
 
                 switch (msg.what) {
                     case GlobalVars.MIC_MSG_DATA:
-                        //Данные с микрофона
-                        //Log.d("MIC_MSG_DATA", String.valueOf(data));
-                        _speaker.addData(data);
-                        /*
+                        //Данные с микрофона передаем
                         if (GlobalVars.isServer) {
-                            _server.setSendData(data);
+                            if (_server.isRunning()) {
+                                _server.addData(data);
+                            }
                         } else {
-                            _client.setSendData(data);
+                            if (_client.isRunning()) {
+                                _client.addData(data);
+                            }
                         }
-                        */
                         break;
 
                     case GlobalVars.SERVER_MSG_DATA:
                     case GlobalVars.CLIENT_MSG_DATA:
                         //Данные от сервера или клиента - проигрываем
-                        //_speaker.setSendData(data);
+                        _speaker.addData(data);
                         break;
                 }
             }
@@ -65,83 +71,87 @@ public class BackgroundService extends Service {
         GlobalVars.oldDeviceName = _bluetooth.getName();
         GlobalVars.currentAddress = _bluetooth.getAddress();
 
+        //Utils.getInstance().addStatusText(GlobalVars.context.getString(R.string.bt_wait_on));
         //Ждем включения bluetooth
         if (!_bluetooth.isEnabled()) {
             _bluetooth.turnOn();
-            while (!_bluetooth.isEnabled()) {
-                ;
-            }
         }
+        Utils.getInstance().addStatusText(GlobalVars.context.getString(R.string.bt_turn_on));
 
         _bluetooth.changeDeviceName(GlobalVars.currentDeviceName);
-        _bluetooth.makeDiscoverable();
 
         GlobalVars.isBluetoothDiscoveryFinished = false;
         _bluetooth.startDiscovery();
+        Utils.getInstance().waitScreenBTDiscovery();
 
-        Thread th = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                int count = 0;
-                while (true) {
-                    if (GlobalVars.isBluetoothDiscoveryFinished) {
-                        break;
-                    }
-                    count++;
-                    Utils.getInstance().sleep(1);
-                    //Ждем 12 секунд
-                    if (count > 12000) {
-                        break;
-                    }
+        Async async = new Async();
+        async.execute();
+
+        return START_NOT_STICKY;//super.onStartCommand(intent, flags, startId);
+    }
+
+    /**
+     * Продолжаем работу
+     */
+    private class ConThread extends Thread {
+        @Override
+        public void run() {
+            //Получаем список устройств вокруг
+            _devices = _bluetooth.getDescoveredDevices();
+
+            BluetoothDevice dev = findServer();
+            if (dev == null) {
+                //Сервер не найден - значит мы первые
+                GlobalVars.isServer = true;
+                _bluetooth.makeDiscoverable();
+                startServer();
+            } else {
+                //Сервер найден, подключаемся к нему
+                GlobalVars.isServer = false;
+                connectToServer(dev);
+            }
+
+            //Пошел микрофон, динамик
+            startMic();
+            startSpeaker();
+            Utils.getInstance().setMaxVolume();
+
+            //Новый статус у приложения
+            GlobalVars.currentProgramState = GlobalVars.IS_ON;
+        }
+    };
+
+    /**
+     *  Асинхронный поток, ждет окончания поиска устройств
+     */
+    private class Async extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+            while (true) {
+                if (GlobalVars.isBluetoothDiscoveryFinished) {
+                    break;
                 }
             }
-        });
-        th.start();
+            _conThread = new ConThread();
+            _conThread.start();
 
-        if (!GlobalVars.isBluetoothDiscoveryFinished) {
-            return 0;
+            return null;
         }
-
-        //Получаем список устройств вокруг
-        _devices = _bluetooth.getDescoveredDevices();
-
-        BluetoothDevice dev = findServer();
-        if (dev == null) {
-            //Сервер не найден - значит мы первые
-            GlobalVars.isServer = true;
-            startServer();
-        } else {
-            //Сервер найден, подключаемся к нему
-            GlobalVars.isServer = false;
-            connectToServer(dev);
-        }
-
-        //Пошел микрофон, динамик
-        startMicSpeaker();
-
-        //Новый статус у приложения
-        GlobalVars.currentProgramState = GlobalVars.IS_ON;
-
-        //Максимальная громкость
-        Utils.getInstance().setMaxVolume();
-
-        return super.onStartCommand(intent, flags, startId);
-    }
+    };
 
     @Override
     public void onDestroy() {
         Utils.getInstance().setNormalVolume();
-
-        stopServerOrClient();
-        stopMicSpeaker();
+        _bluetooth.changeDeviceName(GlobalVars.oldDeviceName);
 
         if (_bluetooth.isEnabled()) {
             _bluetooth.turnOff();
-            //Ждем выключения bluetooth
-            while (_bluetooth.isEnabled()) {
-                ;
-            }
+            Utils.getInstance().addStatusText(GlobalVars.context.getString(R.string.bt_turn_off));
         }
+
+        stopServerOrClient();
+        stopMic();
+        stopSpeaker();
 
         GlobalVars.currentProgramState = GlobalVars.IS_OFF;
     }
@@ -186,14 +196,20 @@ public class BackgroundService extends Service {
     }
 
     /**
-     * Запуск микрофона и динамика
+     * Запуск микрофона
      */
-    private void startMicSpeaker() {
+    private void startMic() {
         if (_mic == null) {
             _mic = new MicHelper();
             _mic.addReciever(_handler);
             _mic.start();
         }
+    }
+
+    /**
+     * Запуск динамика
+     */
+    private void startSpeaker() {
         if (_speaker == null) {
             _speaker = new SpeakerHelper();
             _speaker.start();
@@ -201,22 +217,21 @@ public class BackgroundService extends Service {
     }
 
     /**
-     * Остановка микрофона и динамика
+     * Остановка микрофона
      */
-    private void stopMicSpeaker() {
+    private void stopMic() {
         if (_mic != null) {
             _mic.close();
-            while (_mic.isRunning()) {
-                Utils.getInstance().sleep(10);
-            }
             _mic = null;
         }
+    }
 
+    /**
+     * Остановка динамика
+     */
+    private void stopSpeaker() {
         if (_speaker != null) {
             _speaker.close();
-            while (_speaker.isRunning()) {
-                Utils.getInstance().sleep(10);
-            }
             _speaker = null;
         }
     }
@@ -228,38 +243,35 @@ public class BackgroundService extends Service {
         if (GlobalVars.isServer) {
             if (_server != null) {
                 _server.close();
+                _server = null;
             }
         } else {
             if (_client != null) {
                 _client.close();
+                _client = null;
             }
         }
     }
-
 
     /**
      * Поиск сервера
      * @return
      */
     private BluetoothDevice findServer() {
-        //В поисках сервера
-        if (_devices == null) {
-            return null;
-        }
+        if (_devices != null) {
+            for (HashMap.Entry<String, String> entry : _devices.entrySet()) {
+                String key = (String) entry.getKey();
+                String value = (String) entry.getValue();
 
-        for (HashMap.Entry<String, String> entry : _devices.entrySet()) {
-            String key = (String) entry.getKey();
-            String value = (String) entry.getValue();
-
-            if (analizeKeyName(key)) {
-                //Нашли сервер, подключаемс к нему
-                BluetoothDevice device = _bluetooth.getDevice(value);
-                if (device != null) {
-                    return device;
+                if (analizeKeyName(key)) {
+                    //Нашли сервер, подключаемс к нему
+                    BluetoothDevice device = _bluetooth.getDevice(value);
+                    if (device != null) {
+                        return device;
+                    }
                 }
             }
         }
-
         return null;
     }
 }
