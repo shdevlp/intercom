@@ -77,7 +77,7 @@ public class BackgroundService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         GlobalVars.currentDeviceName = Utils.getInstance().getNewDeviceName();
         GlobalVars.oldDeviceName = _bluetooth.getName();
-        GlobalVars.currentAddress = _bluetooth.getAddress();
+        GlobalVars.currentDeviceAddress = _bluetooth.getAddress();
 
         //Ждем включения bluetooth
         if (!_bluetooth.isEnabled()) {
@@ -187,8 +187,9 @@ public class BackgroundService extends Service {
     private void connectToServer(BluetoothDevice device) {
         GlobalVars.connectDeviceName = device.getName();
         GlobalVars.connectDeviceAddrs = device.getAddress();
+        GlobalVars.connectDeviceUUID = GlobalVars.connectDeviceName.split("_")[1];
 
-        _client = new BluetoothClient(device, GlobalVars.connectDeviceAddrs);
+        _client = new BluetoothClient(device);
         _client.addReciever(_handler);
         _client.start();
     }

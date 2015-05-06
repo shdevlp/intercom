@@ -31,7 +31,7 @@ public class BluetoothServer extends CommonThreadObject {
         try {
             String[] strs = GlobalVars.currentDeviceName.split("_");
             String name = strs[0];
-            UUID uuid = UUID.fromString(strs[1]);
+            UUID uuid = UUID.fromString(GlobalVars.connectDeviceUUID);
 
             _serverSocket = _ba.listenUsingRfcommWithServiceRecord(name, uuid);
 
@@ -100,7 +100,7 @@ public class BluetoothServer extends CommonThreadObject {
                 while (_isRunning) {
                     //Получаем данные(если есть)
                     availableBytes = inStream.available();
-                    if(availableBytes > 0) {
+                    if (availableBytes > 0) {
                         byte[] buffer = new byte[availableBytes];
                         bytesRead = inStream.read(buffer);
                         if (bytesRead > 0) {
@@ -118,7 +118,7 @@ public class BluetoothServer extends CommonThreadObject {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
                 Utils.getInstance().addStatusText(GlobalVars.activity.getString(
-                        R.string.something_went_wrong) + e.getMessage());
+                        R.string.error_connection_dropped) + e.getMessage());
             }
         }else{
             _isRunning = false;

@@ -25,11 +25,16 @@ public class GlobalVars {
     public static volatile int oldRingerMode = AudioManager.RINGER_MODE_NORMAL;
     public static volatile boolean isSpeakerPhoneOn = false;
 
-    public static volatile String currentDeviceName  = null;  //Текущее имя Bluetooth устройства
-    public static volatile String oldDeviceName      = null;  //Старое имя Bluetooth устройства
+    public static volatile String currentDeviceUUID    = null;
+    public static volatile String currentDeviceName    = null;  //Текущее имя Bluetooth устройства
+    public static volatile String currentDeviceAddress = null;  //Текущий адрес Bluetooth устройства
+
+    public static volatile String oldDeviceName = null;  //Старое имя Bluetooth устройства
+
     public static volatile String connectDeviceName  = null;  //Сопрягаемое имя устройства
+    public static volatile String connectDeviceUUID  = null;  //Сопрягаемое UUID устройства
     public static volatile String connectDeviceAddrs = null;  //Сопрягаемый адрес устройства
-    public static volatile String currentAddress     = null;  //Текущий адрес Bluetooth устройства
+
 
     public static volatile boolean isServer = false;
     public static volatile int MIN_BUFFER_SIZE = 0;

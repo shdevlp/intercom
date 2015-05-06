@@ -2,6 +2,7 @@ package ru.bitprofi.intercom;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.util.Log;
 import android.widget.Toast;
 
 import java.io.DataInputStream;
@@ -22,14 +23,13 @@ public class BluetoothClient extends CommonThreadObject {
      * Инициализация
      *
      * @param device
-     * @param uuid
      */
-    public BluetoothClient(BluetoothDevice device, String uuid) {
+    public BluetoothClient(BluetoothDevice device) {
         super(GlobalVars.SERVER_MSG_DATA);
 
         try {
             Utils.getInstance().setStatusText(GlobalVars.activity.getString(R.string.client_searching));
-            _socket = device.createRfcommSocketToServiceRecord(UUID.fromString(uuid));
+            _socket = device.createRfcommSocketToServiceRecord(UUID.fromString(GlobalVars.connectDeviceUUID));
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -89,7 +89,7 @@ public class BluetoothClient extends CommonThreadObject {
         } catch (IOException e) {
             e.printStackTrace();
             Utils.getInstance().setStatusText(GlobalVars.activity.getString(
-                    R.string.something_went_wrong) + ":\n" + e.getMessage());
+                    R.string.error_connection_dropped) + ":\n" + e.getMessage());
             try {
                 _isRunning = false;
                 _socket.close();

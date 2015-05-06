@@ -113,7 +113,8 @@ public class Utils {
      * @return
      */
     public synchronized String getNewDeviceName() {
-        return GlobalVars.PREFIX_DEVICE_NAME + UUID.randomUUID().toString();
+        GlobalVars.currentDeviceUUID = UUID.randomUUID().toString();
+        return GlobalVars.PREFIX_DEVICE_NAME + GlobalVars.currentDeviceUUID;
     }
 
     /**

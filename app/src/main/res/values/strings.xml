@@ -10,9 +10,11 @@
     <string name="information">Информация</string>
     <string name="wait">Подождите</string>
 
-    <string name="something_went_wrong">Что то пошло не так</string>
+    <string name="something_went_wrong">Что то пошло не так </string>
 
-    <string name="error_connected">Ошибка подключения</string>
+
+    <string name="error_connected">Ошибка подключения </string>
+    <string name="error_connection_dropped">Подключение сброшенно </string>
 
     <string name="bt_not_supported">Ваше устройство не поддерживает Bluetooth</string>
     <string name="bt_turn_on">Bluetooth включен</string>
