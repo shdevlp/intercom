@@ -57,7 +57,7 @@ public class BluetoothClient extends CommonThreadObject {
             if (success) {
                 _isRunning = true;
                 //Успешно подлючились
-                Utils.getInstance().setStatusText(GlobalVars.activity.getString(
+                Utils.getInstance().addStatusText(GlobalVars.activity.getString(
                         R.string.client_is_connected));
 
                 tmpIn = _socket.getInputStream();

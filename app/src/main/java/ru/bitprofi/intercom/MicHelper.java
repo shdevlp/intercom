@@ -55,7 +55,7 @@ public class MicHelper extends CommonThreadObject {
         try {
             _recorder.startRecording();
         } catch(IllegalStateException e) {
-            Log.e("MicHelper.run():startRecording", e.getMessage());
+            Log.e("MicHelper.run()", "startRecording:" + e.getMessage());
             throw new RuntimeException(e.getMessage());
         }
 

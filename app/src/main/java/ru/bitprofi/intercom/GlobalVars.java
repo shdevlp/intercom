@@ -35,7 +35,6 @@ public class GlobalVars {
     public static volatile String connectDeviceUUID  = null;  //Сопрягаемое UUID устройства
     public static volatile String connectDeviceAddrs = null;  //Сопрягаемый адрес устройства
 
-
     public static volatile boolean isServer = false;
     public static volatile int MIN_BUFFER_SIZE = 0;
 

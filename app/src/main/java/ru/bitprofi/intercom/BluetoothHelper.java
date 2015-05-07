@@ -27,12 +27,16 @@ public class BluetoothHelper {
             String action = intent.getAction();
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                _devices.add(device);
+                if (device != null && _devices != null) {
+                    _devices.add(device);
+                }
                 return;
             }
             if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)) {
                 GlobalVars.isBluetoothDiscoveryFinished = false;
-                _devices.clear();
+                if (_devices != null) {
+                    _devices.clear();
+                }
                 return;
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 GlobalVars.isBluetoothDiscoveryFinished = true;

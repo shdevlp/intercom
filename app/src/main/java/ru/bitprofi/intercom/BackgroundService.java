@@ -19,16 +19,16 @@ import java.util.HashMap;
  */
 public class BackgroundService extends Service {
     private BluetoothHelper _bluetooth; //Помощь с bluetooth оборудованием
-    private BluetoothClient _client;    //Клиент
-    private BluetoothServer _server;    //Сервер
+    private BluetoothClient2 _client;   //Клиент
+    private BluetoothServer2 _server;   //Сервер
 
     private HashMap<String, String> _devices; //Список устройств вокруг
 
-    private MicHelper     _mic;     //Микрофон
-    private SpeakerHelper _speaker; //Динамик
+    //private MicHelper     _mic;     //Микрофон
+    //private SpeakerHelper _speaker; //Динамик
     private ConThread  _conThread;
 
-    private Handler _handler;       //Обработчик
+    //private Handler _handler;       //Обработчик
 
 
     @Override
@@ -36,6 +36,7 @@ public class BackgroundService extends Service {
         _bluetooth = new BluetoothHelper();
         _conThread = null;
 
+        /*
         _handler = new Handler() {
             public void handleMessage(android.os.Message msg) {
                 byte[] data = (byte[])msg.obj;
@@ -70,22 +71,23 @@ public class BackgroundService extends Service {
                 }
             }
         };
+        */
     }
 
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        GlobalVars.currentDeviceName = Utils.getInstance().getNewDeviceName();
-        GlobalVars.oldDeviceName = _bluetooth.getName();
-        GlobalVars.currentDeviceAddress = _bluetooth.getAddress();
-
         //Ждем включения bluetooth
         if (!_bluetooth.isEnabled()) {
             _bluetooth.turnOn();
         }
-        Utils.getInstance().addStatusText(GlobalVars.context.getString(R.string.bt_turn_on));
 
+        GlobalVars.oldDeviceName        = _bluetooth.getName();
+        GlobalVars.currentDeviceName    = Utils.getInstance().getNewDeviceName();
+        GlobalVars.currentDeviceAddress = _bluetooth.getAddress();
         _bluetooth.changeDeviceName(GlobalVars.currentDeviceName);
+
+        Utils.getInstance().addStatusText(GlobalVars.context.getString(R.string.bt_turn_on));
 
         GlobalVars.isBluetoothDiscoveryFinished = false;
         _bluetooth.startDiscovery();
@@ -111,7 +113,9 @@ public class BackgroundService extends Service {
                 //Сервер не найден - значит мы первые
                 GlobalVars.isServer = true;
                 _bluetooth.makeDiscoverable();
-                startServer();
+                //startServer();
+                _server = new BluetoothServer2(_bluetooth.getAdapter());
+                _server.start();
             } else {
                 //Сервер найден, подключаемся к нему
                 GlobalVars.isServer = false;
@@ -119,8 +123,8 @@ public class BackgroundService extends Service {
             }
 
             //Пошел микрофон, динамик
-            startMic();
-            startSpeaker();
+            //startMic();
+            //startSpeaker();
             Utils.getInstance().setMaxVolume();
 
             //Новый статус у приложения
@@ -157,8 +161,8 @@ public class BackgroundService extends Service {
         }
 
         stopServerOrClient();
-        stopMic();
-        stopSpeaker();
+        //stopMic();
+        //stopSpeaker();
 
         GlobalVars.currentProgramState = GlobalVars.IS_OFF;
     }
@@ -189,23 +193,29 @@ public class BackgroundService extends Service {
         GlobalVars.connectDeviceAddrs = device.getAddress();
         GlobalVars.connectDeviceUUID = GlobalVars.connectDeviceName.split("_")[1];
 
-        _client = new BluetoothClient(device);
-        _client.addReciever(_handler);
+        _client = new BluetoothClient2(device);
+        //_client.addReciever(_handler);
         _client.start();
     }
+
+
 
     /**
      * Запуск сервера
      */
+    /*
     private void startServer() {
-        _server = new BluetoothServer(_bluetooth.getAdapter());
-        _server.addReciever(_handler);
+        _server = new BluetoothServer2(_bluetooth.getAdapter());
+        //_server.addReciever(_handler);
         _server.start();
     }
+    */
+
 
     /**
      * Запуск микрофона
      */
+/*
     private void startMic() {
         if (_mic == null) {
             _mic = new MicHelper();
@@ -213,49 +223,53 @@ public class BackgroundService extends Service {
             _mic.start();
         }
     }
-
+*/
     /**
      * Запуск динамика
      */
+    /*
     private void startSpeaker() {
         if (_speaker == null) {
             _speaker = new SpeakerHelper();
             _speaker.start();
         }
     }
-
+*/
     /**
      * Остановка микрофона
      */
+    /*
     private void stopMic() {
         if (_mic != null) {
             _mic.close();
             _mic = null;
         }
     }
+    */
 
     /**
      * Остановка динамика
      */
+    /*
     private void stopSpeaker() {
         if (_speaker != null) {
             _speaker.close();
             _speaker = null;
         }
     }
-
+*/
     /**
      * Остановка сервера или клиента
      */
     private void stopServerOrClient() {
         if (GlobalVars.isServer) {
             if (_server != null) {
-                _server.close();
+                _server.stopThread();
                 _server = null;
             }
         } else {
             if (_client != null) {
-                _client.close();
+                _client.stopThread();
                 _client = null;
             }
         }
