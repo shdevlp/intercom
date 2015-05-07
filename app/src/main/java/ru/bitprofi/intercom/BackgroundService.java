@@ -85,10 +85,11 @@ public class BackgroundService extends Service {
         GlobalVars.oldDeviceName        = _bluetooth.getName();
         GlobalVars.currentDeviceName    = Utils.getInstance().getNewDeviceName();
         GlobalVars.currentDeviceAddress = _bluetooth.getAddress();
+
         _bluetooth.changeDeviceName(GlobalVars.currentDeviceName);
+        _bluetooth.makeDiscoverable();
 
         Utils.getInstance().addStatusText(GlobalVars.context.getString(R.string.bt_turn_on));
-        startServer(); //Запуск сервера по умолчанию
 
         GlobalVars.isBluetoothDiscoveryFinished = false;
         _bluetooth.startDiscovery();
@@ -111,13 +112,10 @@ public class BackgroundService extends Service {
 
             BluetoothDevice dev = findServer();
             if (dev == null) {
-                //Никто не найден - мы правильно запустились как сервер!
-                //Делаем себя видимым для других!
-                _bluetooth.makeDiscoverable();
+                startServer(); //Запуск сервера
             } else {
                 //Сервер уже был запущен!
-                //Надо включить ранее запущенный сервер и запустить клиента
-                stopServer();
+                //Запуск клиента
                 connectToServer(dev);
             }
 

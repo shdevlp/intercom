@@ -106,9 +106,9 @@ public class BluetoothServer2 extends CommonThread {
              }
         } catch (IOException e) {
             stopThread();
-            e.printStackTrace();
             Utils.getInstance().addStatusText(GlobalVars.activity.getString(
                     R.string.error_connection_dropped) + e.getMessage());
+            e.printStackTrace();
         }
     }
 
