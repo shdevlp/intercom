@@ -83,6 +83,7 @@ public class BluetoothServer2 extends CommonThread {
              createPlayer();
              startWork();
 
+             //Буфер для аудиоданных
              byte[] buffer = new byte[GlobalVars.BYTES_PER_ELEMENT * GlobalVars.MIN_BUFFER_SIZE];
              while (_isRunning) {
                  //Чтение с микрофона

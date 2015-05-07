@@ -7,9 +7,6 @@ import android.media.AudioTrack;
 import android.media.MediaRecorder;
 import android.util.Log;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-
 /**
  * Created by Дмитрий on 07.05.2015.
  */
@@ -81,7 +78,7 @@ public class CommonThread extends Thread {
     }
 
     /**
-     * Запись и воспроизведение - Начать!
+     * Запись и воспроизведение - Старт!
      */
     protected void startWork() {
         try {

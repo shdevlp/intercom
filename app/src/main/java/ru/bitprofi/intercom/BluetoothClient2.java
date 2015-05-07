@@ -20,7 +20,7 @@ public class BluetoothClient2 extends CommonThread {
     public BluetoothClient2(BluetoothDevice device) {
         super();
         try {
-            Utils.getInstance().setStatusText(GlobalVars.activity.getString(R.string.client_searching));
+            Utils.getInstance().addStatusText(GlobalVars.activity.getString(R.string.client_searching));
             _socket = device.createRfcommSocketToServiceRecord(UUID.fromString(GlobalVars.connectDeviceUUID));
         } catch (IOException e) {
             e.printStackTrace();
@@ -84,12 +84,12 @@ public class BluetoothClient2 extends CommonThread {
         } catch (IOException e) {
             stopThread();
             e.printStackTrace();
-            Utils.getInstance().setStatusText(GlobalVars.activity.getString(
+            Utils.getInstance().addStatusText(GlobalVars.activity.getString(
                     R.string.error_connection_dropped) + ":\n" + e.getMessage());
         }
 
         if (!success) {
-            Utils.getInstance().setStatusText(GlobalVars.activity.getString(
+            Utils.getInstance().addStatusText(GlobalVars.activity.getString(
                     R.string.error_connected));
         }
     }
