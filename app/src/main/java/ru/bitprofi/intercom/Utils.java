@@ -15,6 +15,8 @@ import android.widget.TextView;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.UUID;
 
 import at.markushi.ui.CircleButton;
@@ -163,6 +165,15 @@ public class Utils {
     }
 
     /**
+     * Текущая дата и время
+     * @return
+     */
+    public synchronized String currentDateTime(String format) {
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
+        return sdf.format(new Date());
+    }
+
+    /**
      * Добавить текст в статус
      * @param text
      * @return
@@ -174,7 +185,7 @@ public class Utils {
                 @Override
                 public void run() {
                     String txt = status.getText().toString();
-                    txt = text + "\n" + txt;
+                    txt = currentDateTime("HH:mm:ss") +" " + text + "\n" + txt;
                     status.setText(txt);
                 }
             });

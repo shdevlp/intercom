@@ -1,6 +1,8 @@
 package ru.bitprofi.intercom;
 
 import android.content.Intent;
+import android.graphics.drawable.ColorDrawable;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -15,12 +17,24 @@ public class MainActivity extends ActionBarActivity {
         GlobalVars.context = getApplicationContext();
         GlobalVars.activity = MainActivity.this;
 
+        setActionBar("INTERCOM ver. 201505071521");
+
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.container, new PlaceholderFragment())
                     .commit();
         }
      }
+
+    private void setActionBar(String heading) {
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setHomeButtonEnabled(true);
+        actionBar.setDisplayHomeAsUpEnabled(false);
+        actionBar.setDisplayShowHomeEnabled(false);
+        actionBar.setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.royalblue)));
+        actionBar.setTitle(heading);
+        actionBar.show();
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

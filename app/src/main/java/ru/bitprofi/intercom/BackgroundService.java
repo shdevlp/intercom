@@ -88,6 +88,7 @@ public class BackgroundService extends Service {
         _bluetooth.changeDeviceName(GlobalVars.currentDeviceName);
 
         Utils.getInstance().addStatusText(GlobalVars.context.getString(R.string.bt_turn_on));
+        startServer(); //Запуск сервера по умолчанию
 
         GlobalVars.isBluetoothDiscoveryFinished = false;
         _bluetooth.startDiscovery();
@@ -110,15 +111,13 @@ public class BackgroundService extends Service {
 
             BluetoothDevice dev = findServer();
             if (dev == null) {
-                //Сервер не найден - значит мы первые
-                GlobalVars.isServer = true;
+                //Никто не найден - мы правильно запустились как сервер!
+                //Делаем себя видимым для других!
                 _bluetooth.makeDiscoverable();
-                //startServer();
-                _server = new BluetoothServer2(_bluetooth.getAdapter());
-                _server.start();
             } else {
-                //Сервер найден, подключаемся к нему
-                GlobalVars.isServer = false;
+                //Сервер уже был запущен!
+                //Надо включить ранее запущенный сервер и запустить клиента
+                stopServer();
                 connectToServer(dev);
             }
 
@@ -193,8 +192,8 @@ public class BackgroundService extends Service {
         GlobalVars.connectDeviceAddrs = device.getAddress();
         GlobalVars.connectDeviceUUID = GlobalVars.connectDeviceName.split("_")[1];
 
+        GlobalVars.isServer = false;
         _client = new BluetoothClient2(device);
-        //_client.addReciever(_handler);
         _client.start();
     }
 
@@ -203,13 +202,25 @@ public class BackgroundService extends Service {
     /**
      * Запуск сервера
      */
-    /*
-    private void startServer() {
-        _server = new BluetoothServer2(_bluetooth.getAdapter());
-        //_server.addReciever(_handler);
-        _server.start();
+    private boolean startServer() {
+        GlobalVars.isServer = true;
+        if (_server == null) {
+            _server = new BluetoothServer2(_bluetooth.getAdapter());
+            _server.start();
+            return true;
+        }
+        return false;
     }
-    */
+
+    /**
+     * Остановка и уничтожение сервера
+     */
+    private void stopServer() {
+        if (_server != null) {
+            _server.stopThread();
+            _server = null;
+        }
+    }
 
 
     /**
