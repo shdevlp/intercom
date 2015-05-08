@@ -1,15 +1,10 @@
 package ru.bitprofi.intercom;
 
-import android.app.ProgressDialog;
 import android.app.Service;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.os.Handler;
 import android.os.IBinder;
-import android.provider.Settings;
-import android.util.Log;
-
 import java.util.HashMap;
 
 
@@ -19,86 +14,58 @@ import java.util.HashMap;
  */
 public class BackgroundService extends Service {
     private BluetoothHelper _bluetooth; //Помощь с bluetooth оборудованием
-    private BluetoothClient2 _client;   //Клиент
-    private BluetoothServer2 _server;   //Сервер
-
+    private BluetoothClient _client;   //Клиент
+    private BluetoothServer _server;   //Сервер
     private HashMap<String, String> _devices; //Список устройств вокруг
-
-    //private MicHelper     _mic;     //Микрофон
-    //private SpeakerHelper _speaker; //Динамик
     private ConThread  _conThread;
-
-    //private Handler _handler;       //Обработчик
 
 
     @Override
     public void onCreate() {
         _bluetooth = new BluetoothHelper();
+
+Utils.getInstance().addStatusText(">ЗАПУСК СЛУЖБЫ");
+
         _conThread = null;
-
-        /*
-        _handler = new Handler() {
-            public void handleMessage(android.os.Message msg) {
-                byte[] data = (byte[])msg.obj;
-
-                switch (msg.what) {
-                    case GlobalVars.MIC_MSG_DATA:
-                        //Данные с микрофона передаем
-                        if (GlobalVars.isServer) {
-                            if (_server != null) {
-                                if (_server.isRunning()) {
-                                    _server.addData(data);
-                                }
-                            }
-                        } else {
-                            if (_client != null) {
-                                if (_client.isRunning()) {
-                                    _client.addData(data);
-                                }
-                            }
-                        }
-                        break;
-
-                    case GlobalVars.SERVER_MSG_DATA:
-                    case GlobalVars.CLIENT_MSG_DATA:
-                        //Данные от сервера или клиента - проигрываем
-                        if (_speaker != null) {
-                            if (_speaker.isRunning()) {
-                                _speaker.addData(data);
-                            }
-                        }
-                        break;
-                }
-            }
-        };
-        */
     }
-
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         //Ждем включения bluetooth
         if (!_bluetooth.isEnabled()) {
+
+Utils.getInstance().addStatusText(">ВКЛЮЧИТЬ BLUETOOTH");
+
             _bluetooth.turnOn();
         }
+
+Utils.getInstance().addStatusText(">BLUETOOTH ВКЛЮЧЕН");
 
         GlobalVars.oldDeviceName        = _bluetooth.getName();
         GlobalVars.currentDeviceName    = Utils.getInstance().getNewDeviceName();
         GlobalVars.currentDeviceAddress = _bluetooth.getAddress();
 
         _bluetooth.changeDeviceName(GlobalVars.currentDeviceName);
+
+Utils.getInstance().addStatusText(">НОВОЕ ИМЯ УСТРОЙСТВА:" + GlobalVars.currentDeviceName);
+
+Utils.getInstance().addStatusText(">УСТРОЙСТВО ДОСТУПНО ДЛЯ ОБНАРУЖЕНИЯ");
+
         _bluetooth.makeDiscoverable();
 
         Utils.getInstance().addStatusText(GlobalVars.context.getString(R.string.bt_turn_on));
 
         GlobalVars.isBluetoothDiscoveryFinished = false;
         _bluetooth.startDiscovery();
+
+Utils.getInstance().addStatusText(">НАЧАЛ ПОИСК УСТРОЙСТВ");
+
         Utils.getInstance().waitScreenBTDiscovery();
 
         Async async = new Async();
         async.execute();
 
-        return START_NOT_STICKY;//super.onStartCommand(intent, flags, startId);
+        return START_NOT_STICKY;//Не перезапускать при аварии
     }
 
     /**
@@ -108,22 +75,30 @@ public class BackgroundService extends Service {
         @Override
         public void run() {
             //Получаем список устройств вокруг
+
+Utils.getInstance().addStatusText(">ЗАКОНЧИЛ ПОИСК УСТРОЙСТВ");
+
             _devices = _bluetooth.getDescoveredDevices();
+
+Utils.getInstance().addStatusText(">ПОИСК СЕРВЕРА В НАЙДЕННЫХ УСТРОЙСТВАХ");
 
             BluetoothDevice dev = findServer();
             if (dev == null) {
-                startServer(); //Запуск сервера
+                //Запуск сервера
+Utils.getInstance().addStatusText(">СЕРВЕР НЕ НАЙДЕН");
+                startServer();
+Utils.getInstance().addStatusText(">СЕРВЕР СТУРТУЕТ");
             } else {
+Utils.getInstance().addStatusText(">СЕРВЕР НАЙДЕН");
                 //Сервер уже был запущен!
                 //Запуск клиента
+Utils.getInstance().addStatusText(">КЛИЕНТА СТАРТУЕТ");
                 connectToServer(dev);
             }
 
-            //Пошел микрофон, динамик
-            //startMic();
-            //startSpeaker();
-            Utils.getInstance().setMaxVolume();
+Utils.getInstance().addStatusText(">УСТАНОВКА МАКСИМАЛЬНОЙ ГРОМКОСТИ ЗВУКА");
 
+            Utils.getInstance().setMaxVolume();
             //Новый статус у приложения
             GlobalVars.currentProgramState = GlobalVars.IS_ON;
         }
@@ -158,9 +133,6 @@ public class BackgroundService extends Service {
         }
 
         stopServerOrClient();
-        //stopMic();
-        //stopSpeaker();
-
         GlobalVars.currentProgramState = GlobalVars.IS_OFF;
     }
 
@@ -191,10 +163,9 @@ public class BackgroundService extends Service {
         GlobalVars.connectDeviceUUID = GlobalVars.connectDeviceName.split("_")[1];
 
         GlobalVars.isServer = false;
-        _client = new BluetoothClient2(device);
+        _client = new BluetoothClient(device);
         _client.start();
     }
-
 
 
     /**
@@ -203,81 +174,27 @@ public class BackgroundService extends Service {
     private boolean startServer() {
         GlobalVars.isServer = true;
         if (_server == null) {
-            _server = new BluetoothServer2(_bluetooth.getAdapter());
+            _server = new BluetoothServer(_bluetooth.getAdapter());
             _server.start();
             return true;
         }
+Utils.getInstance().addStatusText(">ОШИБКА ЗАПУСКА СЕРВЕРА - СЕРВЕР УЖЕ РАБОТАЕТ");
         return false;
     }
 
-    /**
-     * Остановка и уничтожение сервера
-     */
-    private void stopServer() {
-        if (_server != null) {
-            _server.stopThread();
-            _server = null;
-        }
-    }
-
-
-    /**
-     * Запуск микрофона
-     */
-/*
-    private void startMic() {
-        if (_mic == null) {
-            _mic = new MicHelper();
-            _mic.addReciever(_handler);
-            _mic.start();
-        }
-    }
-*/
-    /**
-     * Запуск динамика
-     */
-    /*
-    private void startSpeaker() {
-        if (_speaker == null) {
-            _speaker = new SpeakerHelper();
-            _speaker.start();
-        }
-    }
-*/
-    /**
-     * Остановка микрофона
-     */
-    /*
-    private void stopMic() {
-        if (_mic != null) {
-            _mic.close();
-            _mic = null;
-        }
-    }
-    */
-
-    /**
-     * Остановка динамика
-     */
-    /*
-    private void stopSpeaker() {
-        if (_speaker != null) {
-            _speaker.close();
-            _speaker = null;
-        }
-    }
-*/
     /**
      * Остановка сервера или клиента
      */
     private void stopServerOrClient() {
         if (GlobalVars.isServer) {
             if (_server != null) {
+Utils.getInstance().addStatusText(">ОСТАНОВКА СЕРВЕРА");
                 _server.stopThread();
                 _server = null;
             }
         } else {
             if (_client != null) {
+Utils.getInstance().addStatusText(">ОСТАНОВКА КЛИЕНТА");
                 _client.stopThread();
                 _client = null;
             }
@@ -298,6 +215,7 @@ public class BackgroundService extends Service {
                     //Нашли сервер, подключаемс к нему
                     BluetoothDevice device = _bluetooth.getDevice(value);
                     if (device != null) {
+Utils.getInstance().addStatusText(">НАШЕЛ СЕРВЕР:"+device.getName());
                         return device;
                     }
                 }

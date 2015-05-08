@@ -29,9 +29,7 @@ import at.markushi.ui.CircleButton;
 public class PlaceholderFragment extends Fragment {
     private CircleButton _btnGo;       //Кнопка на все случаи жизни
     private ProgressBar _progressBar;  //Показывает длительность процесса
-
     private Intent _mainService; //Фоновая служба
-    //private Intent _echoService; //Эхо служба
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -41,8 +39,6 @@ public class PlaceholderFragment extends Fragment {
 
         GlobalVars.contextFragment = PlaceholderFragment.this.getActivity();
         _mainService = new Intent(GlobalVars.contextFragment, BackgroundService.class);
-        //_echoService = new Intent(_context, EchoService.class);
-        //_context.startService(_echoService);
 
         return rootView;
     }

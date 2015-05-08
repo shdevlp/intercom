@@ -22,9 +22,6 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <service
-            android:name=".EchoService"
-            android:label="EchoService" />
-        <service
             android:name=".BackgroundService"
             android:label="BackgroundService" />
 

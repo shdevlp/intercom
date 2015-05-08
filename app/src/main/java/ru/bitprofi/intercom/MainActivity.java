@@ -17,7 +17,7 @@ public class MainActivity extends ActionBarActivity {
         GlobalVars.context = getApplicationContext();
         GlobalVars.activity = MainActivity.this;
 
-        setActionBar("INTERCOM ver. 201505071521");
+        setActionBar("INTERCOM ver. 201505081050");
 
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
