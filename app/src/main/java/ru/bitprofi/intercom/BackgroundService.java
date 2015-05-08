@@ -14,19 +14,13 @@ import java.util.HashMap;
  */
 public class BackgroundService extends Service {
     private BluetoothHelper _bluetooth; //Помощь с bluetooth оборудованием
-    private BluetoothClient _client;    //Клиент
-    private BluetoothServer _server;    //Сервер
-    private ThreadSearch _searchThread;
     private HashMap<String, String> _devices; //Список устройств вокруг
 
     @Override
-    public void onCreate() {
+    public int onStartCommand(Intent intent, int flags, int startId) {
         _bluetooth = new BluetoothHelper();
         _devices = new HashMap<String, String>();
-    }
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
         //Ждем включения bluetooth
         if (!_bluetooth.isEnabled()) {
             _bluetooth.turnOn();
@@ -45,8 +39,30 @@ public class BackgroundService extends Service {
         _bluetooth.startDiscovery();
         Utils.getInstance().waitScreenBTDiscovery();
 
-        AsyncThreadSearch ats = new AsyncThreadSearch();
-        ats.execute();
+        AsyncTask<Void, Void, Void> at = new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                while (!GlobalVars.isBluetoothDiscoveryFinished) {
+                    ;
+                }
+                _devices = _bluetooth.getDescoveredDevices();
+                GlobalVars.serverDevice = findServer();
+
+                if (GlobalVars.serverDevice == null) {
+                    GlobalVars.isServer = true;
+                    Utils.getInstance().addStatusText("Это устройство СЕРВЕР");
+                } else {
+                    GlobalVars.isServer = false;
+                    Utils.getInstance().addStatusText("Это устройство КЛИЕНТ");
+                }
+                Utils.getInstance().setMaxVolume();
+                Utils.getInstance().setBtnColor(getResources().getColor(R.color.seagreen));
+                Utils.getInstance().setBtnEnabled(true);
+
+                return null;
+            }
+        };
+        at.execute();
 
         return START_NOT_STICKY;//Не перезапускать при аварии
     }
@@ -60,8 +76,6 @@ public class BackgroundService extends Service {
             _bluetooth.turnOff();
             Utils.getInstance().addStatusText(GlobalVars.context.getString(R.string.bt_turn_off));
         }
-
-        stopServerOrClient();
     }
 
     @Override
@@ -69,109 +83,7 @@ public class BackgroundService extends Service {
         return null;
     }
 
-    /**
-     * Подключение к серверу
-     */
-    private void connectToServer(BluetoothDevice device) {
-        GlobalVars.connectDeviceName = device.getName();
-        GlobalVars.connectDeviceAddrs = device.getAddress();
-        GlobalVars.connectDeviceUUID = GlobalVars.connectDeviceName.split("_")[1];
-
-        _client = new BluetoothClient(device);
-        _client.start();
-    }
-
-
-    /**
-     * Запуск сервера
-     */
-    private void startServerOrClient() {
-        if (GlobalVars.isServer) {
-            if (_server == null) {
-                _server = new BluetoothServer(_bluetooth.getAdapter());
-                _server.start();
-            }
-        } else {
-            if (_client == null) {
-                if (GlobalVars.serverDevice != null) {
-                    connectToServer(GlobalVars.serverDevice);
-                }
-            }
-        }
-    }
-
-    /**
-     * Остановка сервера или клиента
-     */
-    private void stopServerOrClient() {
-        if (GlobalVars.isServer) {
-            if (_server != null) {
-                _server.stopThread();
-                _server = null;
-            }
-        } else {
-            if (_client != null) {
-                _client.stopThread();
-                _client = null;
-            }
-        }
-    }
-
-    /**
-     *  Асинхронный поток, ждет окончания поиска устройств
-     */
-    private class AsyncThreadSearch extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected Void doInBackground(Void... params) {
-            while (true) {
-                if (GlobalVars.isBluetoothDiscoveryFinished) {
-                    break;
-                }
-            }
-            _searchThread = new ThreadSearch();
-            _searchThread.start();
-
-            return null;
-        }
-    }
-
-    /**
-     * Продолжает работу
-     */
-    private class ThreadSearch extends Thread {
-        @Override
-        public void run() {
-            _devices.clear();
-            _devices = _bluetooth.getDescoveredDevices();
-
-            GlobalVars.serverDevice = findServer();
-            if (GlobalVars.serverDevice == null) {
-                GlobalVars.isServer = true;
-            } else {
-                GlobalVars.isServer = false;
-            }
-            Utils.getInstance().setMaxVolume();
-
-
-            synchronized (this) {
-                GlobalVars.isServiceThread = true;
-            }
-
-            boolean b = false;
-            while (true) {
-                if (GlobalVars.buttonState == GlobalVars.BUTTON_IS_ON && b == false) {
-                    startServerOrClient();
-                    b = true;
-                }
-                if (GlobalVars.buttonState == GlobalVars.BUTTON_IS_OFF && b == true) {
-                    stopServerOrClient();
-                    b = false;
-                }
-            }
-        }
-    }
-
-    /**
+      /**
      * Изучает имя устройства, если найдено сопрягаемое устройство возвращает true
      * @param key
      * @return
@@ -189,7 +101,7 @@ public class BackgroundService extends Service {
      * Поиск сервера
      * @return
      */
-    private synchronized BluetoothDevice findServer() {
+    private BluetoothDevice findServer() {
         if (_devices != null) {
             for (HashMap.Entry<String, String> entry : _devices.entrySet()) {
                 String key = (String) entry.getKey();

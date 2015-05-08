@@ -17,17 +17,17 @@ import java.util.UUID;
  */
 public class BluetoothServer extends CommonThread {
     private BluetoothServerSocket _serverSocket = null;
-    private BluetoothAdapter _ba = null;
 
-    public BluetoothServer(BluetoothAdapter ba) {
+    public BluetoothServer() {
         super();
+        BluetoothHelper bluetooth = new BluetoothHelper();
+        BluetoothAdapter ba = bluetooth.getAdapter();
 
-        _ba = ba;
         try {
             String[] strs = GlobalVars.currentDeviceName.split("_");
             String name = strs[0];
             UUID uuid = UUID.fromString(strs[1]);
-            _serverSocket = _ba.listenUsingRfcommWithServiceRecord(name, uuid);
+            _serverSocket = ba.listenUsingRfcommWithServiceRecord(name, uuid);
 
             Utils.getInstance().addStatusText(GlobalVars.activity.getString(
                     R.string.server_wait_connection));

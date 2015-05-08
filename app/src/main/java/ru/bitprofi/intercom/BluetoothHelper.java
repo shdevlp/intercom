@@ -99,12 +99,9 @@ public class BluetoothHelper {
             return null;
         }
 
-Utils.getInstance().addStatusText(">НАЙДЕННЫЕ УСТРОЙСТВА:");
-
         HashMap map = new HashMap<String, String>();
         for (BluetoothDevice bt : _devices) {
             Utils.getInstance().addStatusText(bt.getName() + " : "+ bt.getAddress());
-Utils.getInstance().addStatusText(">ИМЯ:"+bt.getName() + " АДРЕС:" + bt.getAddress());
             map.put(bt.getName(), bt.getAddress());
         }
         return map;

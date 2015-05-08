@@ -13,27 +13,7 @@ import at.markushi.ui.CircleButton;
 public class PlaceholderFragment extends Fragment {
     private CircleButton _btnGo;   //Кнопка на все случаи жизни
     private Intent _mainService;   //Фоновая служба
-
-    private ATask _at = null;
-
-    private class ATask extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected Void doInBackground(Void... params) {
-            while (true) {
-                if (GlobalVars.isServiceThread) {
-                    Utils.getInstance().setBtnColor(getResources().getColor(R.color.seagreen));
-                    Utils.getInstance().setBtnEnabled(true);
-                    if (GlobalVars.isServer) {
-                        Utils.getInstance().addStatusText("Это устройство СЕРВЕР");
-                    } else {
-                        Utils.getInstance().addStatusText("Это устройство КЛИЕНТ");
-                    }
-                    break;
-                }
-            }
-            return null;
-        }
-    };
+    private Intent _networkService;//Cлужба сервер клиент
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -49,9 +29,7 @@ public class PlaceholderFragment extends Fragment {
 
         GlobalVars.contextFragment = PlaceholderFragment.this.getActivity();
         _mainService = new Intent(GlobalVars.contextFragment, BackgroundService.class);
-
-        _at = new ATask();
-        _at.execute();
+        _networkService = new Intent(GlobalVars.contextFragment, NetworkService.class);
 
         GlobalVars.contextFragment.startService(_mainService);
     }
@@ -74,8 +52,6 @@ public class PlaceholderFragment extends Fragment {
         };
 
         _btnGo.setOnClickListener(onClickBtns);
-
-        Utils.getInstance().setBtnColor(getResources().getColor(R.color.yellow));
         Utils.getInstance().setBtnEnabled(false);
     }
 
@@ -86,7 +62,9 @@ public class PlaceholderFragment extends Fragment {
         //Программа уже работает - надо выключить
         if (GlobalVars.buttonState == GlobalVars.BUTTON_IS_ON) {
             _btnGo.setColor(getResources().getColor(R.color.seagreen));
-            //GlobalVars.contextFragment.stopService(_mainService);
+
+            GlobalVars.contextFragment.stopService(_networkService);
+
             GlobalVars.buttonState = GlobalVars.BUTTON_IS_OFF;
             return;
         }
@@ -94,6 +72,9 @@ public class PlaceholderFragment extends Fragment {
         //Включаем работу
         if (GlobalVars.buttonState == GlobalVars.BUTTON_IS_OFF) {
             _btnGo.setColor(getResources().getColor(R.color.crimson));
+
+            GlobalVars.contextFragment.startService(_networkService);
+
             GlobalVars.buttonState = GlobalVars.BUTTON_IS_ON;
             return;
         }
