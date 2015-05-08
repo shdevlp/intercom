@@ -16,7 +16,7 @@ import java.util.Set;
  * Created by Дмитрий on 22.04.2015.
  */
 public class BluetoothHelper {
-    private static final int BT_DISCOVERABLE_DURATION = 600;
+    private static final int BT_DISCOVERABLE_DURATION = 3600;
 
     private Set<BluetoothDevice> _devices; //Обнаруженные устройства для подключенния
     private BluetoothAdapter _ba;

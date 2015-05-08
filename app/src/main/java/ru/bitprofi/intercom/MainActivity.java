@@ -1,6 +1,5 @@
 package ru.bitprofi.intercom;
 
-import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;

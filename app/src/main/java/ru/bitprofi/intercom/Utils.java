@@ -2,14 +2,11 @@ package ru.bitprofi.intercom;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
-import android.provider.MediaStore;
-import android.widget.Button;
 import android.widget.TextView;
 
 import java.io.FileNotFoundException;
@@ -131,6 +128,25 @@ public class Utils {
                 @Override
                 public void run() {
                     btn.setColor(color);
+                }
+            });
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Включить/Выключить кнопку
+     * @param flgEnabled
+     * @return
+     */
+    public synchronized boolean setBtnEnabled(final boolean flgEnabled) {
+        final CircleButton btn = (CircleButton)GlobalVars.activity.findViewById(R.id.btnGo);
+        if (btn != null) {
+            GlobalVars.activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    btn.setEnabled(flgEnabled);
                 }
             });
             return true;
@@ -264,44 +280,6 @@ public class Utils {
             os.close();
         } catch (IOException e) {
             e.printStackTrace();
-        }
-    }
-
-    /**
-     * Проверка возврата функции getMinBufferSize
-     * @param buffSize
-     */
-    public synchronized void checkGetMinBufferSize(int buffSize) {
-        if (buffSize == AudioRecord.ERROR) {
-            throw new RuntimeException("AudioRecord.getMinBufferSize() = ERROR");
-        }
-        if (buffSize == AudioRecord.ERROR_BAD_VALUE) {
-            throw new RuntimeException("AudioRecord.getMinBufferSize() = ERROR_BAD_VALUE");
-        }
-    }
-
-    /**
-     * Проверка возврата функции AudioRecoder.read
-     * @param read
-     */
-    public synchronized void checkRead(int read) {
-        if (read == AudioRecord.ERROR_INVALID_OPERATION) {
-            throw new RuntimeException("AudioRecord.read() = ERROR_INVALID_OPERATION");
-        }
-        if (read == AudioRecord.ERROR_BAD_VALUE) {
-            throw new RuntimeException("AudioRecord.read() = ERROR_BAD_VALUE");
-        }
-    }
-
-
-    /**
-     * Установка минимального размера буфера
-     */
-    public synchronized void setMinBufferSize() {
-        if (GlobalVars.MIN_BUFFER_SIZE <= 0) {
-            GlobalVars.MIN_BUFFER_SIZE = AudioRecord.getMinBufferSize(GlobalVars.AUDIO_SAMPLERATE,
-                AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
-            Utils.getInstance().checkGetMinBufferSize(GlobalVars.MIN_BUFFER_SIZE);
         }
     }
 
