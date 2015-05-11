@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
+import android.os.Handler;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -12,11 +13,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
 
+
 /**
  * Created by Дмитрий on 07.05.2015.
  */
 public class BluetoothServer extends CommonThread {
     private BluetoothServerSocket _serverSocket = null;
+    private SpeakerHelper _speaker = null;
+    private MicHelper _mic = null;
 
     public BluetoothServer() {
         super();
@@ -40,70 +44,52 @@ public class BluetoothServer extends CommonThread {
     public void run() {
         android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
 
-        BluetoothSocket socket = null;
-
-        InputStream      tmpIn     = null;
-        OutputStream     tmpOut    = null;
-        DataInputStream  inStream  = null;
-        DataOutputStream outStream = null;
-
-        int bytesRead;
-        int availableBytes;
-
         if (_serverSocket == null) {
             stopThread();
             Utils.getInstance().addStatusText(GlobalVars.activity.getString(R.string.server_close));
             return;
         }
 
+        int bytesRead;
+        int availableBytes;
+
         try {
-             socket = _serverSocket.accept();
-             _isRunning = true;
+            BluetoothSocket socket = _serverSocket.accept();
+            _isRunning = true;
 
-             BluetoothDevice remoteDevice = socket.getRemoteDevice();
-             GlobalVars.connectDeviceName  = remoteDevice.getName();
-             GlobalVars.connectDeviceAddrs = remoteDevice.getAddress();
+            BluetoothDevice remoteDevice = socket.getRemoteDevice();
+            GlobalVars.connectDeviceName  = remoteDevice.getName();
+            GlobalVars.connectDeviceAddrs = remoteDevice.getAddress();
 
-             //Есть подключение
-             final String strConnected = GlobalVars.activity.getString(
+            //Есть подключение
+            final String strConnected = GlobalVars.activity.getString(
                       R.string.server_is_connected)+":\n" +
-                      remoteDevice.getName() + "\n" + remoteDevice.getAddress();
-             Utils.getInstance().addStatusText(strConnected);
+                     remoteDevice.getName() + "\n" + remoteDevice.getAddress();
+            Utils.getInstance().addStatusText(strConnected);
 
-             _serverSocket.close();
+            _serverSocket.close();
 
-             tmpIn     = socket.getInputStream();
-             tmpOut    = socket.getOutputStream();
-             inStream  = new DataInputStream(tmpIn);
-             outStream = new DataOutputStream(tmpOut);
+            InputStream tmpInput = socket.getInputStream();
+            OutputStream tmpOutput = socket.getOutputStream();
+            DataInputStream inStream = new DataInputStream(tmpInput);
+            DataOutputStream outStream = new DataOutputStream(tmpOutput);
 
-             getMinBufferSize();
-             createRecorder();
-             createPlayer();
-             startWork();
-
-             //Буфер для аудиоданных
-             byte[] buffer = new byte[GlobalVars.BYTES_PER_ELEMENT * GlobalVars.MIN_BUFFER_SIZE];
-             while (_isRunning) {
-                 //Получаем данные от клиента(если они есть)
-                 availableBytes = inStream.available();
-                 if (availableBytes > 0) {
-                    byte[] buffer2 = new byte[availableBytes];
-                    //Читаем
-                    bytesRead = inStream.read(buffer2);
+            while (_isRunning) {
+                availableBytes = inStream.available();
+                if (availableBytes > 0) {
+                    byte[] buffer = new byte[availableBytes];
+                    bytesRead = inStream.read(buffer);
                     if (bytesRead > 0) {
-                        //Воспроизводим
-                        _player.write(buffer2, 0, buffer2.length);
-                    }//if
-                 }//if
+                        _handler.sendMessage(_handler.obtainMessage(GlobalVars.SPEAKER_MSG_DATA, buffer));
+                    }
+                }
 
-                 //Чтение с микрофона
-                 bytesRead = _recorder.read(buffer, 0, buffer.length);
-                 if (bytesRead > 0) {
-                     //Отправляем данные клиенту
-                     outStream.write(buffer, 0, buffer.length);
-                 }
-             }
+                if (_vector.size() > 0) {
+                    byte[] buff = _vector.elementAt(0);
+                    outStream.write(buff, 0, buff.length);
+                    _vector.removeElementAt(0);
+                }
+            }
         } catch (IOException e) {
             stopThread();
             Utils.getInstance().addStatusText(GlobalVars.activity.getString(
@@ -118,8 +104,6 @@ public class BluetoothServer extends CommonThread {
     public void stopThread() {
         super.stopThread();
 
-        freePlayer();
-        freeRecorder();
         try {
             if (_serverSocket != null) {
                 _serverSocket.accept(50);

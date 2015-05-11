@@ -1,7 +1,6 @@
 package ru.bitprofi.intercom;
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -14,6 +13,10 @@ public class PlaceholderFragment extends Fragment {
     private CircleButton _btnGo;   //Кнопка на все случаи жизни
     private Intent _mainService;   //Фоновая служба
     private Intent _networkService;//Cлужба сервер клиент
+
+    private final int BUTTON_IS_ON = 1;
+    private final int BUTTON_IS_OFF = 0;
+    private int buttonState = BUTTON_IS_OFF;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -31,7 +34,9 @@ public class PlaceholderFragment extends Fragment {
         _mainService = new Intent(GlobalVars.contextFragment, BackgroundService.class);
         _networkService = new Intent(GlobalVars.contextFragment, NetworkService.class);
 
-        GlobalVars.contextFragment.startService(_mainService);
+        if (!Utils.getInstance().isServiceRunning(NetworkService.class)) {
+            GlobalVars.contextFragment.startService(_networkService);
+        }
     }
 
     /**
@@ -60,22 +65,24 @@ public class PlaceholderFragment extends Fragment {
      */
     private void btnGoClicked() {
         //Программа уже работает - надо выключить
-        if (GlobalVars.buttonState == GlobalVars.BUTTON_IS_ON) {
+        if (buttonState == BUTTON_IS_ON) {
             _btnGo.setColor(getResources().getColor(R.color.seagreen));
 
-            GlobalVars.contextFragment.stopService(_networkService);
+            GlobalVars.contextFragment.stopService(_mainService);
 
-            GlobalVars.buttonState = GlobalVars.BUTTON_IS_OFF;
+            buttonState = BUTTON_IS_OFF;
             return;
         }
 
         //Включаем работу
-        if (GlobalVars.buttonState == GlobalVars.BUTTON_IS_OFF) {
+        if (buttonState == BUTTON_IS_OFF) {
             _btnGo.setColor(getResources().getColor(R.color.crimson));
 
-            GlobalVars.contextFragment.startService(_networkService);
+            if (!Utils.getInstance().isServiceRunning(BackgroundService.class)) {
+                GlobalVars.contextFragment.startService(_mainService);
+            }
 
-            GlobalVars.buttonState = GlobalVars.BUTTON_IS_ON;
+            buttonState = BUTTON_IS_ON;
             return;
         }
    }

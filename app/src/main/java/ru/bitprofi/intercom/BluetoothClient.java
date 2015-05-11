@@ -3,6 +3,7 @@ package ru.bitprofi.intercom;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -28,13 +29,6 @@ public class BluetoothClient extends CommonThread {
 
     @Override
     public void run() {
-        android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
-
-        InputStream     tmpIn      = null;
-        OutputStream    tmpOut     = null;
-        DataInputStream inStream   = null;
-        DataOutputStream outStream = null;
-
         int availableBytes;
         int bytesRead;
 
@@ -49,39 +43,28 @@ public class BluetoothClient extends CommonThread {
                 Utils.getInstance().addStatusText(GlobalVars.activity.getString(
                         R.string.client_is_connected));
 
-                tmpIn     = _socket.getInputStream();
-                tmpOut    = _socket.getOutputStream();
-                inStream  = new DataInputStream(tmpIn);
-                outStream = new DataOutputStream(tmpOut);
+                InputStream tmpInput = _socket.getInputStream();
+                OutputStream tmpOutput = _socket.getOutputStream();
+                DataInputStream inStream = new DataInputStream(tmpInput);
+                DataOutputStream outStream = new DataOutputStream(tmpOutput);
 
-                getMinBufferSize();
-                createRecorder();
-                createPlayer();
-                startWork();
-
-                byte[] buffer = new byte[GlobalVars.BYTES_PER_ELEMENT * GlobalVars.MIN_BUFFER_SIZE];
                 while (_isRunning) {
-                    //Чтение с микрофона
-                    bytesRead = _recorder.read(buffer, 0, buffer.length);
-                    if (bytesRead > 0) {
-                        //Отправляем данные на сервер
-                        outStream.write(buffer, 0, buffer.length);
-                    }
-
-                    //Получаем данные с сервера(если они есть)
                     availableBytes = inStream.available();
                     if (availableBytes > 0) {
-                        byte[] buffer2 = new byte[availableBytes];
-                        //Читаем
-                        bytesRead = inStream.read(buffer2);
+                        byte[] buffer = new byte[availableBytes];
+                        bytesRead = inStream.read(buffer);
                         if (bytesRead > 0) {
-                            //Воспроизводим
-                            _player.write(buffer2, 0, buffer2.length);
-                        }//if
-                    }//if
+                            _handler.sendMessage(_handler.obtainMessage(GlobalVars.SPEAKER_MSG_DATA, buffer));
+                        }
+                    }
 
-                } //while
-            } //succses socket connection
+                    if (_vector.size() > 0) {
+                        byte[] buff = _vector.elementAt(0);
+                        outStream.write(buff, 0, buff.length);
+                        _vector.removeElementAt(0);
+                    }
+                }
+            }
         } catch (IOException e) {
             stopThread();
             e.printStackTrace();
@@ -102,8 +85,6 @@ public class BluetoothClient extends CommonThread {
     public void stopThread() {
         super.stopThread();
 
-        freePlayer();
-        freeRecorder();
         try {
             if (_socket != null) {
                 _socket.close();

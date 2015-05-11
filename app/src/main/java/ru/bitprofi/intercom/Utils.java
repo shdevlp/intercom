@@ -1,5 +1,6 @@
 package ru.bitprofi.intercom;
 
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -7,6 +8,7 @@ import android.content.DialogInterface;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
+import android.util.Log;
 import android.widget.TextView;
 
 import java.io.FileNotFoundException;
@@ -309,5 +311,38 @@ public class Utils {
         audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
         audioManager.setMode(AudioManager.MODE_NORMAL);
         audioManager.setSpeakerphoneOn(true);
+    }
+
+    /**
+     * Установка размера буфера под аудиоданные
+     */
+    public synchronized void setMinBufferSize() {
+        if (GlobalVars.MIN_BUFFER_SIZE <= 0) {
+            GlobalVars.MIN_BUFFER_SIZE = AudioRecord.getMinBufferSize(GlobalVars.AUDIO_SAMPLERATE,
+                    AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
+            if (GlobalVars.MIN_BUFFER_SIZE == AudioRecord.ERROR) {
+                Log.e("ERROR", "AudioRecord.getMinBufferSize() = ERROR");
+                throw new RuntimeException("AudioRecord.getMinBufferSize() = ERROR");
+            }
+            if (GlobalVars.MIN_BUFFER_SIZE == AudioRecord.ERROR_BAD_VALUE) {
+                Log.e("ERROR", "AudioRecord.getMinBufferSize() = ERROR_BAD_VALUE");
+                throw new RuntimeException("AudioRecord.getMinBufferSize() = ERROR_BAD_VALUE");
+            }
+        }
+    }
+
+    /**
+     * Запущена ли служба
+     * @param serviceClass
+     * @return
+     */
+    public synchronized boolean isServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) GlobalVars.context.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

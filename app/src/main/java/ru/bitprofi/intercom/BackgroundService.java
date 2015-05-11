@@ -1,68 +1,66 @@
 package ru.bitprofi.intercom;
 
 import android.app.Service;
-import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.os.IBinder;
-
-import java.util.HashMap;
 
 /**
  * Фоновая служба приложения
  * Created by Дмитрий on 05.05.2015.
  */
 public class BackgroundService extends Service {
-    private BluetoothHelper _bluetooth; //Помощь с bluetooth оборудованием
-    private HashMap<String, String> _devices; //Список устройств вокруг
+    private BluetoothClient _client;
+    private BluetoothServer _server;
+    private SpeakerHelper _speaker;
+    private MicHelper _mic;
+
+    private Handler _handler;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        _bluetooth = new BluetoothHelper();
-        _devices = new HashMap<String, String>();
+        _handler = new Handler() {
+            public void handleMessage(android.os.Message msg) {
+                byte[] data = (byte[])msg.obj;
+                switch (msg.what) {
+                    //Обработка данных от микрофона
+                    case GlobalVars.MIC_MSG_DATA:
+                        if (GlobalVars.isServer) {
+                            if (_server != null && _server.isRunning()) {
+                                _server.addData(data);
+                            }
+                        } else {
+                            if (_client != null && _client.isRunning()) {
+                                _client.addData(data);
+                            }
+                        }
+                        break;
 
-        //Ждем включения bluetooth
-        if (!_bluetooth.isEnabled()) {
-            _bluetooth.turnOn();
-        }
-
-        GlobalVars.oldDeviceName        = _bluetooth.getName();
-        GlobalVars.currentDeviceName    = Utils.getInstance().getNewDeviceName();
-        GlobalVars.currentDeviceAddress = _bluetooth.getAddress();
-
-        _bluetooth.changeDeviceName(GlobalVars.currentDeviceName);
-        _bluetooth.makeDiscoverable();
-
-        Utils.getInstance().addStatusText(GlobalVars.context.getString(R.string.bt_turn_on));
-
-        GlobalVars.isBluetoothDiscoveryFinished = false;
-        _bluetooth.startDiscovery();
-        Utils.getInstance().waitScreenBTDiscovery();
-
-        AsyncTask<Void, Void, Void> at = new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                while (!GlobalVars.isBluetoothDiscoveryFinished) {
-                    ;
+                    //Данные для проигрывания
+                    case GlobalVars.SPEAKER_MSG_DATA:
+                        if (_speaker != null && _speaker.isRunning()) {
+                            _speaker.addData(data);
+                        }
+                        break;
                 }
-                _devices = _bluetooth.getDescoveredDevices();
-                GlobalVars.serverDevice = findServer();
-
-                if (GlobalVars.serverDevice == null) {
-                    GlobalVars.isServer = true;
-                    Utils.getInstance().addStatusText("Это устройство СЕРВЕР");
-                } else {
-                    GlobalVars.isServer = false;
-                    Utils.getInstance().addStatusText("Это устройство КЛИЕНТ");
-                }
-                Utils.getInstance().setMaxVolume();
-                Utils.getInstance().setBtnColor(getResources().getColor(R.color.seagreen));
-                Utils.getInstance().setBtnEnabled(true);
-
-                return null;
             }
         };
-        at.execute();
+
+        _mic = new MicHelper();
+        _mic.setHandler(_handler);
+        _mic.start();
+
+        _speaker = new SpeakerHelper();
+        _speaker.start();
+
+        if (GlobalVars.isServer) {
+            startServer();
+        } else {
+            startClient();
+        }
+
+        Utils.getInstance().setMaxVolume();
 
         return START_NOT_STICKY;//Не перезапускать при аварии
     }
@@ -70,11 +68,10 @@ public class BackgroundService extends Service {
     @Override
     public void onDestroy() {
         Utils.getInstance().setNormalVolume();
-        _bluetooth.changeDeviceName(GlobalVars.oldDeviceName);
-
-        if (_bluetooth.isEnabled()) {
-            _bluetooth.turnOff();
-            Utils.getInstance().addStatusText(GlobalVars.context.getString(R.string.bt_turn_off));
+        if (GlobalVars.isServer) {
+            stopServer();
+        } else {
+            stopClient();
         }
     }
 
@@ -83,39 +80,43 @@ public class BackgroundService extends Service {
         return null;
     }
 
-      /**
-     * Изучает имя устройства, если найдено сопрягаемое устройство возвращает true
-     * @param key
-     * @return
-     */
-    private boolean analizeKeyName(String key) {
-        final int idx = key.indexOf(GlobalVars.PREFIX_DEVICE_NAME);
-        if (idx == -1) {
-            return false;
+    private boolean startServer() {
+        if (_server == null) {
+            _server = new BluetoothServer();
+            _server.start();
+            return true;
         }
-        return true;
+        return false;
     }
 
-
-    /**
-     * Поиск сервера
-     * @return
-     */
-    private BluetoothDevice findServer() {
-        if (_devices != null) {
-            for (HashMap.Entry<String, String> entry : _devices.entrySet()) {
-                String key = (String) entry.getKey();
-                String value = (String) entry.getValue();
-
-                if (analizeKeyName(key)) {
-                    //Нашли сервер, подключаемс к нему
-                    BluetoothDevice device = _bluetooth.getDevice(value);
-                    if (device != null) {
-                        return device;
-                    }
-                }
-            }
+    private boolean stopServer() {
+        if (_server != null) {
+            _server.stopThread();
+            _server = null;
+            return true;
         }
-        return null;
+        return false;
+    }
+
+    private boolean startClient() {
+        if (_client == null && GlobalVars.serverDevice != null) {
+            GlobalVars.connectDeviceName  = GlobalVars.serverDevice.getName();
+            GlobalVars.connectDeviceAddrs = GlobalVars.serverDevice.getAddress();
+            GlobalVars.connectDeviceUUID  = GlobalVars.connectDeviceName.split("_")[1];
+
+            _client = new BluetoothClient(GlobalVars.serverDevice);
+            _client.start();
+            return true;
+        }
+        return false;
+    }
+
+    private boolean stopClient() {
+        if (_client != null) {
+            _client.stopThread();
+            _client = null;
+            return true;
+        }
+        return false;
     }
 }
