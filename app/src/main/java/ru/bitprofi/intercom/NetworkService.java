@@ -72,6 +72,9 @@ public class NetworkService extends Service {
         if (_bluetooth.isEnabled()) {
             _bluetooth.turnOff();
             Utils.getInstance().addStatusText(GlobalVars.context.getString(R.string.bt_turn_off));
+            while (_bluetooth.isEnabled()){
+                ;
+            }
         }
     }
 

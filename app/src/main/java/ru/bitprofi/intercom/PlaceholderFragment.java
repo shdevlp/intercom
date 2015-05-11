@@ -12,7 +12,6 @@ import at.markushi.ui.CircleButton;
 public class PlaceholderFragment extends Fragment {
     private CircleButton _btnGo;   //Кнопка на все случаи жизни
     private Intent _mainService;   //Фоновая служба
-    private Intent _networkService;//Cлужба сервер клиент
 
     private final int BUTTON_IS_ON = 1;
     private final int BUTTON_IS_OFF = 0;
@@ -32,11 +31,8 @@ public class PlaceholderFragment extends Fragment {
 
         GlobalVars.contextFragment = PlaceholderFragment.this.getActivity();
         _mainService = new Intent(GlobalVars.contextFragment, BackgroundService.class);
-        _networkService = new Intent(GlobalVars.contextFragment, NetworkService.class);
 
-        if (!Utils.getInstance().isServiceRunning(NetworkService.class)) {
-            GlobalVars.contextFragment.startService(_networkService);
-        }
+        Utils.getInstance().startServiceNetwork();
     }
 
     /**
@@ -68,7 +64,9 @@ public class PlaceholderFragment extends Fragment {
         if (buttonState == BUTTON_IS_ON) {
             _btnGo.setColor(getResources().getColor(R.color.seagreen));
 
-            GlobalVars.contextFragment.stopService(_mainService);
+            if (Utils.getInstance().isServiceRunning(BackgroundService.class)) {
+                GlobalVars.contextFragment.stopService(_mainService);
+            }
 
             buttonState = BUTTON_IS_OFF;
             return;

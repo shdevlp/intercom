@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
@@ -24,6 +25,8 @@ import at.markushi.ui.CircleButton;
  * Created by Дмитрий on 24.04.2015.
  */
 public class Utils {
+    private Intent _networkService = null;
+
     private static class LazyHolder {
         private static final Utils INSTANCE = new Utils();
     }
@@ -344,5 +347,19 @@ public class Utils {
             }
         }
         return false;
+    }
+
+    public synchronized void startServiceNetwork() {
+        if (!isServiceRunning(NetworkService.class)) {
+            _networkService = new Intent(GlobalVars.contextFragment, NetworkService.class);
+            GlobalVars.contextFragment.startService(_networkService);
+        }
+    }
+
+    public synchronized void stopServiceNetwork() {
+        if (isServiceRunning(NetworkService.class)) {
+            GlobalVars.contextFragment.stopService(_networkService);
+            _networkService = null;
+        }
     }
 }

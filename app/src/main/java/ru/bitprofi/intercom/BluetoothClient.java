@@ -9,6 +9,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.UUID;
 
 /**
@@ -21,9 +23,17 @@ public class BluetoothClient extends CommonThread {
         super();
         try {
             Utils.getInstance().addStatusText(GlobalVars.activity.getString(R.string.client_searching));
-            _socket = device.createRfcommSocketToServiceRecord(UUID.fromString(GlobalVars.connectDeviceUUID));
-        } catch (IOException e) {
-            e.printStackTrace();
+
+            Method m = device.getClass().getMethod("createRfcommSocket", new Class[] {int.class});
+            _socket = (BluetoothSocket) m.invoke(device, Integer.valueOf(1));
+
+            //_socket = device.createRfcommSocketToServiceRecord(UUID.fromString(GlobalVars.connectDeviceUUID));
+        } catch (NoSuchMethodException e1) {
+            e1.printStackTrace();
+        } catch (InvocationTargetException e2) {
+            e2.printStackTrace();
+        } catch (IllegalAccessException e3) {
+            e3.printStackTrace();
         }
     }
 
