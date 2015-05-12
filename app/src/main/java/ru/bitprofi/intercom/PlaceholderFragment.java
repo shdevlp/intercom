@@ -52,6 +52,16 @@ public class PlaceholderFragment extends Fragment {
             }
         };
 
+        /**
+         *       GlobalVars.isServer = true;
+         Utils.getInstance().addStatusText(GlobalVars.context.getString(R.string.i_am_server));
+         } else {
+         GlobalVars.isServer = false;
+         Utils.getInstance().addStatusText(GlobalVars.context.getString(R.string.i_am_client));
+         }
+         Utils.getInstance().setBtnColor(getResources().getColor(R.color.seagreen));
+         Utils.getInstance().setBtnEnabled(true);
+         */
         _btnGo.setOnClickListener(onClickBtns);
         Utils.getInstance().setBtnEnabled(false);
     }

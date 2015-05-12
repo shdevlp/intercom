@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-
 /**
  * Поддержка Bluetooth
  * Created by Дмитрий on 22.04.2015.

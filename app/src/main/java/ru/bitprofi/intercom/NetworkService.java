@@ -49,13 +49,14 @@ public class NetworkService extends Service {
 
                 if (GlobalVars.serverDevice == null) {
                     GlobalVars.isServer = true;
-                    Utils.getInstance().addStatusText("Это устройство СЕРВЕР");
+                    Utils.getInstance().addStatusText(GlobalVars.context.getString(R.string.i_am_server));
                 } else {
                     GlobalVars.isServer = false;
-                    Utils.getInstance().addStatusText("Это устройство КЛИЕНТ");
+                    Utils.getInstance().addStatusText(GlobalVars.context.getString(R.string.i_am_client));
                 }
                 Utils.getInstance().setBtnColor(getResources().getColor(R.color.seagreen));
                 Utils.getInstance().setBtnEnabled(true);
+
 
                 return null;
             }
@@ -72,10 +73,10 @@ public class NetworkService extends Service {
         if (_bluetooth.isEnabled()) {
             _bluetooth.turnOff();
             Utils.getInstance().addStatusText(GlobalVars.context.getString(R.string.bt_turn_off));
-            while (_bluetooth.isEnabled()){
-                ;
-            }
         }
+
+        GlobalVars.activity.finish();
+        System.exit(0);
     }
 
     @Override

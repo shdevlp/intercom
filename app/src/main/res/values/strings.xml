@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">Intercom</string>
+    <string name="version">Версия 0.11</string>
+
 
     <string name="btn_go">Поехали</string>
     <string name="btn_go_error">Ошибка</string>
@@ -23,6 +25,9 @@
     <string name="bt_wait_off">Bluetooth выключается</string>
     <string name="bt_find_devices">Поиск устройств</string>
     <string name="bt_find_devices_finish">Поиск устройств закончен</string>
+
+    <string name="i_am_server">Это устройство Сервер</string>
+    <string name="i_am_client">Это устройство Клиент</string>
 
     <string name="server_is_connected">Есть подключение</string>
     <string name="server_wait_connection">Сервер ждет подключения</string>
