@@ -35,7 +35,7 @@ public class BluetoothClient extends CommonThread {
 
         Utils.getInstance().addStatusText(GlobalVars.activity.getString(R.string.client_searching));
 
-        BluetoothSocket tmp = null;
+        BluetoothSocket tmp;
         try {
             tmp = device.createRfcommSocketToServiceRecord(UUID.fromString(GlobalVars.UUID));
         } catch (IOException e) {
@@ -97,7 +97,6 @@ public class BluetoothClient extends CommonThread {
 
             _isRunning = true;
             while (_isRunning) {
-
                 availableBytes = _inStream.available();
                 if (availableBytes > 0) {
                     byte[] buffer = new byte[availableBytes];

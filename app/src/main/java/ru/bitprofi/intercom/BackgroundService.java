@@ -27,20 +27,26 @@ public class BackgroundService extends Service {
                     //Обработка данных от микрофона
                     case GlobalVars.MIC_MSG_DATA:
                         if (GlobalVars.isServer) {
-                            if (_server != null && _server.isRunning()) {
-                                _server.addData(data);
+                            if (_server != null) {
+                                if (_server.isRunning()) {
+                                    _server.addData(data);
+                                }
                             }
                         } else {
-                            if (_client != null && _client.isRunning()) {
-                                _client.addData(data);
+                            if (_client != null) {
+                                if (_client.isRunning()) {
+                                    _client.addData(data);
+                                }
                             }
                         }
                         break;
 
                     //Данные для проигрывания
                     case GlobalVars.SPEAKER_MSG_DATA:
-                        if (_speaker != null && _speaker.isRunning()) {
-                            _speaker.addData(data);
+                        if (_speaker != null) {
+                            if (_speaker.isRunning()) {
+                                _speaker.addData(data);
+                            }
                         }
                         break;
                 }
