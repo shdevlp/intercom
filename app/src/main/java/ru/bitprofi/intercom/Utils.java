@@ -116,10 +116,12 @@ public class Utils {
      * Возвращает новое имя устройство с известным префиксом
      * @return
      */
+    /*
     public synchronized String getNewDeviceName() {
         GlobalVars.currentDeviceUUID = UUID.randomUUID().toString();
         return GlobalVars.PREFIX_DEVICE_NAME + GlobalVars.currentDeviceUUID;
     }
+    */
 
     /**
      * Установить цвет кнопки

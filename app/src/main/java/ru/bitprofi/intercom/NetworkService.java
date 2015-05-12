@@ -28,7 +28,7 @@ public class NetworkService extends Service {
         }
 
         GlobalVars.oldDeviceName        = _bluetooth.getName();
-        GlobalVars.currentDeviceName    = Utils.getInstance().getNewDeviceName();
+        GlobalVars.currentDeviceName    = GlobalVars.BLUETOOTH_NAME;// Utils.getInstance().getNewDeviceName();
         GlobalVars.currentDeviceAddress = _bluetooth.getAddress();
 
         _bluetooth.changeDeviceName(GlobalVars.currentDeviceName);
@@ -90,6 +90,7 @@ public class NetworkService extends Service {
      * @param key
      * @return
      */
+    /*
     private boolean analizeKeyName(String key) {
         final int idx = key.indexOf(GlobalVars.PREFIX_DEVICE_NAME);
         if (idx == -1) {
@@ -97,7 +98,7 @@ public class NetworkService extends Service {
         }
         return true;
     }
-
+    */
 
     /**
      * Поиск сервера
@@ -109,7 +110,7 @@ public class NetworkService extends Service {
                 String key = (String) entry.getKey();
                 String value = (String) entry.getValue();
 
-                if (analizeKeyName(key)) {
+                if (key.indexOf(GlobalVars.BLUETOOTH_NAME) != -1) {
                     //Нашли сервер, подключаемс к нему
                     BluetoothDevice device = _bluetooth.getDevice(value);
                     if (device != null) {

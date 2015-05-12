@@ -55,20 +55,11 @@ public class BackgroundService extends Service {
             startClient();
         }
 
-        if (_mic != null) {
-            _mic.stopThread();
-            _mic = null;
-        }
-        _mic = new MicHelper();
-        _mic.setHandler(_handler);
-        _mic.start();
+        stopMic();
+        startMic();
 
-        if (_speaker != null) {
-            _speaker.stopThread();
-            _speaker = null;
-        }
-        _speaker = new SpeakerHelper();
-        _speaker.start();
+        stopSpeaker();
+        startSpeaker();
 
         Utils.getInstance().setMaxVolume();
 
@@ -78,6 +69,9 @@ public class BackgroundService extends Service {
     @Override
     public void onDestroy() {
         Utils.getInstance().setNormalVolume();
+        stopSpeaker();
+        stopMic();
+
         if (GlobalVars.isServer) {
             stopServer();
         } else {
@@ -90,6 +84,63 @@ public class BackgroundService extends Service {
         return null;
     }
 
+    /**
+     *
+     * @return
+     */
+    private boolean startMic() {
+        if (_mic == null) {
+            _mic = new MicHelper();
+            _mic.setHandler(_handler);
+            _mic.start();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     *
+     * @return
+     */
+    private boolean stopMic() {
+        if (_mic != null) {
+            _mic.stopThread();
+            _mic = null;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     *
+     * @return
+     */
+    private boolean startSpeaker() {
+        if (_speaker == null) {
+            _speaker = new SpeakerHelper();
+            _speaker.start();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     *
+     * @return
+     */
+    private boolean stopSpeaker() {
+        if (_speaker != null) {
+            _speaker.stopThread();
+            _speaker = null;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     *
+     * @return
+     */
     private boolean startServer() {
         if (_server == null) {
             _server = new BluetoothServer();
@@ -99,6 +150,10 @@ public class BackgroundService extends Service {
         return false;
     }
 
+    /**
+     *
+     * @return
+     */
     private boolean stopServer() {
         if (_server != null) {
             _server.stopThread();
@@ -108,12 +163,12 @@ public class BackgroundService extends Service {
         return false;
     }
 
+    /**
+     *
+     * @return
+     */
     private boolean startClient() {
         if (_client == null && GlobalVars.serverDevice != null) {
-            GlobalVars.connectDeviceName  = GlobalVars.serverDevice.getName();
-            GlobalVars.connectDeviceAddrs = GlobalVars.serverDevice.getAddress();
-            GlobalVars.connectDeviceUUID  = GlobalVars.connectDeviceName.split("_")[1];
-
             _client = new BluetoothClient(GlobalVars.serverDevice);
             _client.start();
             return true;
@@ -121,6 +176,10 @@ public class BackgroundService extends Service {
         return false;
     }
 
+    /**
+     *
+     * @return
+     */
     private boolean stopClient() {
         if (_client != null) {
             _client.stopThread();

@@ -26,14 +26,14 @@ public class GlobalVars {
     public static int oldRingerMode = AudioManager.RINGER_MODE_NORMAL;
     public static boolean isSpeakerPhoneOn = false;
 
-    public static String currentDeviceUUID    = null;
+    //public static String currentDeviceUUID    = null;
     public static String currentDeviceName    = null;  //Текущее имя Bluetooth устройства
     public static String currentDeviceAddress = null;  //Текущий адрес Bluetooth устройства
 
     public static String oldDeviceName = null;  //Старое имя Bluetooth устройства
 
     public static String connectDeviceName  = null;  //Сопрягаемое имя устройства
-    public static String connectDeviceUUID  = null;  //Сопрягаемое UUID устройства
+    //public static String connectDeviceUUID  = null;  //Сопрягаемое UUID устройства
     public static String connectDeviceAddrs = null;  //Сопрягаемый адрес устройства
 
     public static boolean isServer = false;
@@ -46,7 +46,8 @@ public class GlobalVars {
     public static final int MIC_MSG_DATA     = 0;
     public static final int SPEAKER_MSG_DATA = 1;
 
-    public static final String PREFIX_DEVICE_NAME = "INTERCOM_"; //Префикс для Bluetooth устройств
+    public static final String UUID = "9e7a2220-c899-4937-8453-1048008e1538";
+    public static final String BLUETOOTH_NAME = "INTERCOM";
     public static final int AUDIO_SAMPLERATE = 44100; //Дискретизация звука
 
     public static final int BUTTON_IS_ON = 1;
