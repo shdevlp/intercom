@@ -13,10 +13,6 @@ public class PlaceholderFragment extends Fragment {
     private CircleButton _btnGo;   //Кнопка на все случаи жизни
     private Intent _mainService;   //Фоновая служба
 
-    private final int BUTTON_IS_ON = 1;
-    private final int BUTTON_IS_OFF = 0;
-    private int buttonState = BUTTON_IS_OFF;
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -52,16 +48,6 @@ public class PlaceholderFragment extends Fragment {
             }
         };
 
-        /**
-         *       GlobalVars.isServer = true;
-         Utils.getInstance().addStatusText(GlobalVars.context.getString(R.string.i_am_server));
-         } else {
-         GlobalVars.isServer = false;
-         Utils.getInstance().addStatusText(GlobalVars.context.getString(R.string.i_am_client));
-         }
-         Utils.getInstance().setBtnColor(getResources().getColor(R.color.seagreen));
-         Utils.getInstance().setBtnEnabled(true);
-         */
         _btnGo.setOnClickListener(onClickBtns);
         Utils.getInstance().setBtnEnabled(false);
     }
@@ -71,26 +57,22 @@ public class PlaceholderFragment extends Fragment {
      */
     private void btnGoClicked() {
         //Программа уже работает - надо выключить
-        if (buttonState == BUTTON_IS_ON) {
-            _btnGo.setColor(getResources().getColor(R.color.seagreen));
-
+        if (GlobalVars.buttonState == GlobalVars.BUTTON_IS_ON) {
             if (Utils.getInstance().isServiceRunning(BackgroundService.class)) {
                 GlobalVars.contextFragment.stopService(_mainService);
             }
 
-            buttonState = BUTTON_IS_OFF;
+            Utils.getInstance().setBtnOnOff(false);
             return;
         }
 
         //Включаем работу
-        if (buttonState == BUTTON_IS_OFF) {
-            _btnGo.setColor(getResources().getColor(R.color.crimson));
-
+        if (GlobalVars.buttonState == GlobalVars.BUTTON_IS_OFF) {
             if (!Utils.getInstance().isServiceRunning(BackgroundService.class)) {
                 GlobalVars.contextFragment.startService(_mainService);
             }
 
-            buttonState = BUTTON_IS_ON;
+            Utils.getInstance().setBtnOnOff(true);
             return;
         }
    }

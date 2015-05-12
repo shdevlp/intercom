@@ -1,7 +1,8 @@
 package ru.bitprofi.intercom;
 
 import java.util.Vector;
-import android.os.Handler;
+
+import android.os.*;
 
 /**
  * Created by Дмитрий on 07.05.2015.
@@ -42,6 +43,8 @@ public class CommonThread extends Thread {
      * Остановка потока
      */
     protected void stopThread() {
+        android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_DEFAULT);
         _isRunning = false;
+        Utils.getInstance().setBtnOnOff(false);
     }
 }

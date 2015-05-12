@@ -18,6 +18,8 @@ public class NetworkService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         _bluetooth = new BluetoothHelper();
+        GlobalVars.bluetoothAdapter = _bluetooth.getAdapter();
+
         _devices = new HashMap<String, String>();
 
         //Ждем включения bluetooth
@@ -56,7 +58,6 @@ public class NetworkService extends Service {
                 }
                 Utils.getInstance().setBtnColor(getResources().getColor(R.color.seagreen));
                 Utils.getInstance().setBtnEnabled(true);
-
 
                 return null;
             }

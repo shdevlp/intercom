@@ -362,4 +362,14 @@ public class Utils {
             _networkService = null;
         }
     }
+
+    public synchronized void setBtnOnOff(boolean on) {
+        if (on) {
+            setBtnColor(GlobalVars.activity.getResources().getColor(R.color.crimson));
+            GlobalVars.buttonState = GlobalVars.BUTTON_IS_ON;
+        } else {
+            setBtnColor(GlobalVars.activity.getResources().getColor(R.color.seagreen));
+            GlobalVars.buttonState = GlobalVars.BUTTON_IS_OFF;
+        }
+    }
 }

@@ -47,18 +47,28 @@ public class BackgroundService extends Service {
             }
         };
 
+        if (GlobalVars.isServer) {
+            stopServer();
+            startServer();
+        } else {
+            stopClient();
+            startClient();
+        }
+
+        if (_mic != null) {
+            _mic.stopThread();
+            _mic = null;
+        }
         _mic = new MicHelper();
         _mic.setHandler(_handler);
         _mic.start();
 
+        if (_speaker != null) {
+            _speaker.stopThread();
+            _speaker = null;
+        }
         _speaker = new SpeakerHelper();
         _speaker.start();
-
-        if (GlobalVars.isServer) {
-            startServer();
-        } else {
-            startClient();
-        }
 
         Utils.getInstance().setMaxVolume();
 

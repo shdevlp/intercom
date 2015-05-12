@@ -19,30 +19,31 @@ import java.util.UUID;
  */
 public class BluetoothServer extends CommonThread {
     private BluetoothServerSocket _serverSocket = null;
-    private SpeakerHelper _speaker = null;
-    private MicHelper _mic = null;
 
     public BluetoothServer() {
         super();
-        BluetoothHelper bluetooth = new BluetoothHelper();
-        BluetoothAdapter ba = bluetooth.getAdapter();
-
-        try {
-            String[] strs = GlobalVars.currentDeviceName.split("_");
-            String name = strs[0];
-            UUID uuid = UUID.fromString(strs[1]);
-            _serverSocket = ba.listenUsingRfcommWithServiceRecord(name, uuid);
-
-            Utils.getInstance().addStatusText(GlobalVars.activity.getString(
-                    R.string.server_wait_connection));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Utils.getInstance().addStatusText(GlobalVars.activity.getString(
+                R.string.server_wait_connection));
     }
 
     @Override
     public void run() {
-        android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
+        try {
+            if (GlobalVars.currentDeviceName == null) {
+                throw new RuntimeException("Не заданно имя устройства");
+            }
+            String[] strs = GlobalVars.currentDeviceName.split("_");
+            String name = strs[0];
+            UUID uuid = UUID.fromString(strs[1]);
+            if (GlobalVars.bluetoothAdapter == null) {
+                throw new RuntimeException("Bluetooth недоступен");
+            }
+            _serverSocket = GlobalVars.bluetoothAdapter.listenUsingRfcommWithServiceRecord(name, uuid);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Utils.getInstance().addStatusText(e.getMessage());
+            stopThread();
+        }
 
         if (_serverSocket == null) {
             stopThread();
@@ -50,10 +51,10 @@ public class BluetoothServer extends CommonThread {
             return;
         }
 
-        int bytesRead;
-        int availableBytes;
-
         try {
+            int bytesRead;
+            int availableBytes;
+
             BluetoothSocket socket = _serverSocket.accept();
             _isRunning = true;
 
@@ -74,6 +75,7 @@ public class BluetoothServer extends CommonThread {
             DataInputStream inStream = new DataInputStream(tmpInput);
             DataOutputStream outStream = new DataOutputStream(tmpOutput);
 
+            android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
             while (_isRunning) {
                 availableBytes = inStream.available();
                 if (availableBytes > 0) {
@@ -81,21 +83,21 @@ public class BluetoothServer extends CommonThread {
                     bytesRead = inStream.read(buffer);
                     if (bytesRead > 0) {
                         _handler.sendMessage(_handler.obtainMessage(GlobalVars.SPEAKER_MSG_DATA, buffer));
-                    }
-                }
+                    }//if
+                }//if
 
                 if (_vector.size() > 0) {
                     byte[] buff = _vector.elementAt(0);
                     outStream.write(buff, 0, buff.length);
                     _vector.removeElementAt(0);
-                }
+                }//if
             }
         } catch (IOException e) {
             stopThread();
             Utils.getInstance().addStatusText(GlobalVars.activity.getString(
                     R.string.error_connection_dropped) + e.getMessage());
             e.printStackTrace();
-        }
+        }//try
     }
 
     /**

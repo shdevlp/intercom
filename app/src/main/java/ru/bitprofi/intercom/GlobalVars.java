@@ -48,4 +48,10 @@ public class GlobalVars {
 
     public static final String PREFIX_DEVICE_NAME = "INTERCOM_"; //Префикс для Bluetooth устройств
     public static final int AUDIO_SAMPLERATE = 44100; //Дискретизация звука
+
+    public static final int BUTTON_IS_ON = 1;
+    public static final int BUTTON_IS_OFF = 0;
+    public static int buttonState = BUTTON_IS_OFF;
+
+    public static BluetoothAdapter bluetoothAdapter = null;
 }

@@ -18,7 +18,7 @@ public class BluetoothHelper {
     private static final int BT_DISCOVERABLE_DURATION = 3600;
 
     private Set<BluetoothDevice> _devices; //Обнаруженные устройства для подключенния
-    private BluetoothAdapter _ba;
+    private BluetoothAdapter _ba = null;
 
     //Нашел Bluetooth устройство
     private final BroadcastReceiver receiver = new BroadcastReceiver() {

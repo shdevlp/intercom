@@ -48,8 +48,6 @@ public class MicHelper extends CommonThread {
             throw new RuntimeException("MicHelper: handler = null");
         }
 
-        android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
-
         _isRunning = true;
 
         Utils.getInstance().setMinBufferSize();
@@ -76,6 +74,7 @@ public class MicHelper extends CommonThread {
         byte[][] buffers = new byte[GlobalVars.BUFFER_COUNT][GlobalVars.BYTES_PER_ELEMENT * GlobalVars.MIN_BUFFER_SIZE];
         int count = 0;
 
+        android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
         while (_isRunning) {
             if ( _recorder.read(buffers[count], 0, buffers[count].length) > 0) {
                 _handler.sendMessage(_handler.obtainMessage(GlobalVars.MIC_MSG_DATA, buffers[count]));
