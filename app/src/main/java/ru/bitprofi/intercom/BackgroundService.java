@@ -50,11 +50,13 @@ public class BackgroundService extends Service {
         if (GlobalVars.isServer) {
             if (_server == null) {
                 _server = new BluetoothServer();
+                _server.setHandler(_handler);
                 _server.start();
             }
         } else {
             if (_client == null && GlobalVars.serverDevice != null) {
                 _client = new BluetoothClient(GlobalVars.serverDevice);
+                _client.setHandler(_handler);
                 _client.start();
             }
         }

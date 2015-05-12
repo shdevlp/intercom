@@ -3,6 +3,7 @@ package ru.bitprofi.intercom;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.os.*;
+import android.os.Process;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -37,10 +38,6 @@ public class BluetoothClient extends CommonThread {
         BluetoothSocket tmp = null;
         try {
             tmp = device.createRfcommSocketToServiceRecord(UUID.fromString(GlobalVars.UUID));
-            /*
-             Method m = _device.getClass().getMethod("createRfcommSocket", new Class[]{int.class});
-             _socket = (BluetoothSocket) m.invoke(_device, 1);
-            */
         } catch (IOException e) {
             e.printStackTrace();
             stopThread();
@@ -52,7 +49,11 @@ public class BluetoothClient extends CommonThread {
 
     @Override
     public void run() {
-        android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_DEFAULT);
+        android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_DEFAULT);
+
+        if (_handler == null) {
+            throw new RuntimeException("BluetoothClient : Handler == null");
+        }
 
         try {
             GlobalVars.bluetoothAdapter.cancelDiscovery();
@@ -74,8 +75,8 @@ public class BluetoothClient extends CommonThread {
                     R.string.error_connection_dropped) + " : " + e.getMessage());
         }
 
-        InputStream tmpInput = null;
-        OutputStream tmpOutput = null;
+        InputStream tmpInput;
+        OutputStream tmpOutput;
 
         try {
             tmpInput = _socket.getInputStream();
@@ -90,14 +91,13 @@ public class BluetoothClient extends CommonThread {
         _inStream = new DataInputStream(tmpInput);
         _outStream = new DataOutputStream(tmpOutput);
 
-        android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
-
         try {
             int availableBytes;
             int bytesRead;
 
             _isRunning = true;
             while (_isRunning) {
+
                 availableBytes = _inStream.available();
                 if (availableBytes > 0) {
                     byte[] buffer = new byte[availableBytes];
@@ -107,12 +107,10 @@ public class BluetoothClient extends CommonThread {
                     }//if
                 }//if
 
-                synchronized (this) {
-                    if (_vector.size() > 0) {
-                        byte[] buff = _vector.elementAt(0);
-                        _outStream.write(buff, 0, buff.length);
-                        _vector.removeElementAt(0);
-                    }//if
+                if (_vector.size() > 0) {
+                    byte[] buff = _vector.elementAt(0);
+                    _outStream.write(buff, 0, buff.length);
+                    _vector.removeElementAt(0);
                 }
             }//while
         } catch (IOException e) {
