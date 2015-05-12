@@ -73,7 +73,7 @@ public class BluetoothServer extends CommonThread {
             android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
             while (_isRunning) {
                 availableBytes = _inStream.available();
-                if (availableBytes > 0 && _inStream != null) {
+                if (availableBytes > 0) {
                     byte[] buffer = new byte[availableBytes];
                     bytesRead = _inStream.read(buffer);
                     if (bytesRead > 0) {
@@ -81,10 +81,12 @@ public class BluetoothServer extends CommonThread {
                     }//if
                 }//if
 
-                if (_vector.size() > 0 && _outStream != null) {
-                    byte[] buff = _vector.elementAt(0);
-                    _outStream.write(buff, 0, buff.length);
-                    _vector.removeElementAt(0);
+                synchronized (this) {
+                    if (_vector.size() > 0) {
+                        byte[] buff = _vector.elementAt(0);
+                        _outStream.write(buff, 0, buff.length);
+                        _vector.removeElementAt(0);
+                    }
                 }
             }
         } catch (IOException e) {

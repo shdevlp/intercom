@@ -49,6 +49,9 @@ public class MainActivity extends ActionBarActivity {
         actionBar.show();
     }
 
+    /**
+     *
+     */
     private void addNotification() {
         _notificationManager = (NotificationManager)
                 getSystemService(Context.NOTIFICATION_SERVICE);
@@ -75,8 +78,6 @@ public class MainActivity extends ActionBarActivity {
 
         _notificationManager.notify(NOTIFICATION_EX, notification);
     }
-
-
 
 
     @Override
@@ -106,15 +107,11 @@ public class MainActivity extends ActionBarActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_exit) {
-            Utils.getInstance().stopServiceNetwork();
             _notificationManager.cancel(NOTIFICATION_EX);
+            Utils.getInstance().stopBluetooth();
+            Utils.getInstance().exitApplication();
             return true;
         }
 

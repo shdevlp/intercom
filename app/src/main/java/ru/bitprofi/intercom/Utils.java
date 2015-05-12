@@ -3,6 +3,7 @@ package ru.bitprofi.intercom;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -17,6 +18,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.UUID;
 
 import at.markushi.ui.CircleButton;
@@ -25,8 +27,6 @@ import at.markushi.ui.CircleButton;
  * Created by Дмитрий on 24.04.2015.
  */
 public class Utils {
-    private Intent _networkService = null;
-
     private static class LazyHolder {
         private static final Utils INSTANCE = new Utils();
     }
@@ -38,6 +38,7 @@ public class Utils {
     public static Utils getInstance() {
         return LazyHolder.INSTANCE;
     }
+
 
     /**
      * Диалог с одной кнопкой
@@ -112,16 +113,27 @@ public class Utils {
         alert11.show();
     }
 
+
     /**
-     * Возвращает новое имя устройство с известным префиксом
-     * @return
+     *
      */
-    /*
-    public synchronized String getNewDeviceName() {
-        GlobalVars.currentDeviceUUID = UUID.randomUUID().toString();
-        return GlobalVars.PREFIX_DEVICE_NAME + GlobalVars.currentDeviceUUID;
+    public synchronized void stopBluetooth() {
+        BluetoothHelper bluetooth = new BluetoothHelper();
+
+        bluetooth.changeDeviceName(GlobalVars.oldDeviceName);
+        if (bluetooth.isEnabled()) {
+            bluetooth.turnOff();
+            Utils.getInstance().addStatusText(GlobalVars.context.getString(R.string.bt_turn_off));
+        }
     }
-    */
+
+    /**
+     *
+     */
+    public synchronized void exitApplication() {
+        GlobalVars.activity.finish();
+        System.exit(0);
+    }
 
     /**
      * Установить цвет кнопки
@@ -349,20 +361,6 @@ public class Utils {
             }
         }
         return false;
-    }
-
-    public synchronized void startServiceNetwork() {
-        if (!isServiceRunning(NetworkService.class)) {
-            _networkService = new Intent(GlobalVars.contextFragment, NetworkService.class);
-            GlobalVars.contextFragment.startService(_networkService);
-        }
-    }
-
-    public synchronized void stopServiceNetwork() {
-        if (isServiceRunning(NetworkService.class)) {
-            GlobalVars.contextFragment.stopService(_networkService);
-            _networkService = null;
-        }
     }
 
     public synchronized void setBtnOnOff(boolean on) {

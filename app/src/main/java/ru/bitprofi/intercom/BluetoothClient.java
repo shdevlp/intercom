@@ -2,6 +2,7 @@ package ru.bitprofi.intercom;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.os.*;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -47,32 +48,31 @@ public class BluetoothClient extends CommonThread {
                     R.string.error_connection_dropped) + " : " + e.getMessage());
         }
         _socket = tmp;
+    }
 
-        Thread connectionThread  = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                GlobalVars.bluetoothAdapter.cancelDiscovery();
-                try {
-                    _socket.connect();
-                    BluetoothDevice remoteDevice = _socket.getRemoteDevice();
-                    GlobalVars.connectDeviceName  = remoteDevice.getName();
-                    GlobalVars.connectDeviceAddrs = remoteDevice.getAddress();
+    @Override
+    public void run() {
+        android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_DEFAULT);
 
-                    //Есть подключение
-                    final String strConnected = GlobalVars.activity.getString(
-                            R.string.server_is_connected)+":\n" +
-                            remoteDevice.getName() + "\n" + remoteDevice.getAddress();
-                    Utils.getInstance().addStatusText(strConnected);
-                } catch (IOException e) {
-                    try {
-                        _socket.close();
-                    } catch (IOException e2) {
-                        e2.printStackTrace();
-                    }
-                }
-            }
-        });
-        connectionThread.start();
+        try {
+            GlobalVars.bluetoothAdapter.cancelDiscovery();
+            _socket.connect();
+
+            BluetoothDevice remoteDevice = _socket.getRemoteDevice();
+            GlobalVars.connectDeviceName  = remoteDevice.getName();
+            GlobalVars.connectDeviceAddrs = remoteDevice.getAddress();
+
+            //Есть подключение
+            final String strConnected = GlobalVars.activity.getString(
+                    R.string.server_is_connected)+":\n" +
+                    remoteDevice.getName() + "\n" + remoteDevice.getAddress();
+            Utils.getInstance().addStatusText(strConnected);
+        } catch (IOException e) {
+            e.printStackTrace();
+            stopThread();
+            throw new RuntimeException(GlobalVars.activity.getString(
+                    R.string.error_connection_dropped) + " : " + e.getMessage());
+        }
 
         InputStream tmpInput = null;
         OutputStream tmpOutput = null;
@@ -89,10 +89,7 @@ public class BluetoothClient extends CommonThread {
 
         _inStream = new DataInputStream(tmpInput);
         _outStream = new DataOutputStream(tmpOutput);
-    }
 
-    @Override
-    public void run() {
         android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
 
         try {
@@ -110,11 +107,13 @@ public class BluetoothClient extends CommonThread {
                     }//if
                 }//if
 
-                if (_vector.size() > 0) {
-                    byte[] buff = _vector.elementAt(0);
-                    _outStream.write(buff, 0, buff.length);
-                    _vector.removeElementAt(0);
-                }//if
+                synchronized (this) {
+                    if (_vector.size() > 0) {
+                        byte[] buff = _vector.elementAt(0);
+                        _outStream.write(buff, 0, buff.length);
+                        _vector.removeElementAt(0);
+                    }//if
+                }
             }//while
         } catch (IOException e) {
             stopThread();

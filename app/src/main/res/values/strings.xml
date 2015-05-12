@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Intercom</string>
-    <string name="version">Версия 0.15</string>
+    <string name="version">Версия 0.18</string>
 
 
     <string name="btn_go">Поехали</string>
@@ -13,8 +13,6 @@
     <string name="wait">Подождите</string>
 
     <string name="something_went_wrong">Что то пошло не так </string>
-
-
     <string name="error_connected">Ошибка подключения </string>
     <string name="error_get_io_stream">Ошибка получения потоков ввода/вывода </string>
     <string name="error_connection_dropped">Подключение сброшенно </string>

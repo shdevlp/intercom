@@ -26,9 +26,6 @@
         <service
             android:name=".BackgroundService"
             android:label="BackgroundService" />
-        <service
-            android:name=".NetworkService"
-            android:label="NetworkService" />
 
         <activity
             android:name=".MainActivity"

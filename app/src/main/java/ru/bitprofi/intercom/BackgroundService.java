@@ -48,18 +48,27 @@ public class BackgroundService extends Service {
         };
 
         if (GlobalVars.isServer) {
-            stopServer();
-            startServer();
+            if (_server == null) {
+                _server = new BluetoothServer();
+                _server.start();
+            }
         } else {
-            stopClient();
-            startClient();
+            if (_client == null && GlobalVars.serverDevice != null) {
+                _client = new BluetoothClient(GlobalVars.serverDevice);
+                _client.start();
+            }
         }
 
-        stopMic();
-        startMic();
+        if (_speaker == null) {
+            _speaker = new SpeakerHelper();
+            _speaker.start();
+        }
 
-        stopSpeaker();
-        startSpeaker();
+        if (_mic == null) {
+            _mic = new MicHelper();
+            _mic.setHandler(_handler);
+            _mic.start();
+        }
 
         Utils.getInstance().setMaxVolume();
 
@@ -69,123 +78,31 @@ public class BackgroundService extends Service {
     @Override
     public void onDestroy() {
         Utils.getInstance().setNormalVolume();
-        stopSpeaker();
-        stopMic();
+        if (_mic != null) {
+            _mic.stopThread();
+            _mic = null;
+        }
+
+        if (_speaker != null) {
+            _speaker.stopThread();
+            _speaker = null;
+        }
 
         if (GlobalVars.isServer) {
-            stopServer();
+            if (_server != null) {
+                _server.stopThread();
+                _server = null;
+            }
         } else {
-            stopClient();
+            if (_client != null) {
+                _client.stopThread();
+                _client = null;
+            }
         }
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         return null;
-    }
-
-    /**
-     *
-     * @return
-     */
-    private boolean startMic() {
-        if (_mic == null) {
-            _mic = new MicHelper();
-            _mic.setHandler(_handler);
-            _mic.start();
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     *
-     * @return
-     */
-    private boolean stopMic() {
-        if (_mic != null) {
-            _mic.stopThread();
-            _mic = null;
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     *
-     * @return
-     */
-    private boolean startSpeaker() {
-        if (_speaker == null) {
-            _speaker = new SpeakerHelper();
-            _speaker.start();
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     *
-     * @return
-     */
-    private boolean stopSpeaker() {
-        if (_speaker != null) {
-            _speaker.stopThread();
-            _speaker = null;
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     *
-     * @return
-     */
-    private boolean startServer() {
-        if (_server == null) {
-            _server = new BluetoothServer();
-            _server.start();
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     *
-     * @return
-     */
-    private boolean stopServer() {
-        if (_server != null) {
-            _server.stopThread();
-            _server = null;
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     *
-     * @return
-     */
-    private boolean startClient() {
-        if (_client == null && GlobalVars.serverDevice != null) {
-            _client = new BluetoothClient(GlobalVars.serverDevice);
-            _client.start();
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     *
-     * @return
-     */
-    private boolean stopClient() {
-        if (_client != null) {
-            _client.stopThread();
-            _client = null;
-            return true;
-        }
-        return false;
     }
 }
