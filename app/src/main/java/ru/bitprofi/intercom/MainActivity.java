@@ -3,19 +3,25 @@ package ru.bitprofi.intercom;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.drawable.ColorDrawable;
+import android.os.IBinder;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 public class MainActivity extends ActionBarActivity {
     private static final int NOTIFICATION_EX = 1;
     private NotificationManager _notificationManager;
+    private Intent _networkService = null;
+    private NetworkService _network = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +39,9 @@ public class MainActivity extends ActionBarActivity {
                     .add(R.id.container, new PlaceholderFragment())
                     .commit();
         }
+
+        _networkService = new Intent(this, NetworkService.class);
+        this.startService(_networkService);
      }
 
     /**
@@ -110,8 +119,7 @@ public class MainActivity extends ActionBarActivity {
         int id = item.getItemId();
         if (id == R.id.action_exit) {
             _notificationManager.cancel(NOTIFICATION_EX);
-            Utils.getInstance().stopBluetooth();
-            Utils.getInstance().exitApplication();
+            this.stopService(_networkService);
             return true;
         }
 

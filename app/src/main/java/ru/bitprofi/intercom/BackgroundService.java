@@ -3,20 +3,22 @@ package ru.bitprofi.intercom;
 import android.app.Service;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
+import android.util.Log;
 
 /**
  * Фоновая служба приложения
  * Created by Дмитрий on 05.05.2015.
  */
 public class BackgroundService extends Service {
-    private BluetoothClient _client;
-    private BluetoothServer _server;
-    private SpeakerHelper _speaker;
-    private MicHelper _mic;
+    private BluetoothClient _client = null;
+    private BluetoothServer _server = null;
+    private SpeakerHelper _speaker = null;
+    private MicHelper _mic = null;
 
-    private Handler _handler;
+    private Handler _handler = null;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -78,34 +80,36 @@ public class BackgroundService extends Service {
             _mic.start();
         }
 
-        Utils.getInstance().setMaxVolume();
-
         return START_NOT_STICKY;//Не перезапускать при аварии
     }
 
     @Override
     public void onDestroy() {
-        Utils.getInstance().setNormalVolume();
-        if (_mic != null) {
-            _mic.stopThread();
-            _mic = null;
-        }
-
-        if (_speaker != null) {
-            _speaker.stopThread();
-            _speaker = null;
-        }
-
-        if (GlobalVars.isServer) {
-            if (_server != null) {
-                _server.stopThread();
-                _server = null;
+        try {
+            if (_mic != null) {
+                _mic.stopThread();
+                _mic = null;
             }
-        } else {
-            if (_client != null) {
-                _client.stopThread();
-                _client = null;
+
+            if (_speaker != null) {
+                _speaker.stopThread();
+                _speaker = null;
             }
+
+            if (GlobalVars.isServer) {
+                if (_server != null) {
+                    _server.stopThread();
+                    _server = null;
+                }
+            } else {
+                if (_client != null) {
+                    _client.stopThread();
+                    _client = null;
+                }
+            }
+        } catch (Exception e) {
+            Log.e("Background:onDestroy", e.getMessage());
+            Utils.getInstance().addStatusText(e.getMessage());
         }
     }
 

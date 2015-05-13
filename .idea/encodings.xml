@@ -3,5 +3,6 @@
   <component name="Encoding" useUTFGuessing="true" native2AsciiForPropertiesFiles="false">
     <file url="file://$PROJECT_DIR$/app/src/main/java/ru/bitprofi/intercom/CommonThread.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/ru/bitprofi/intercom/MainActivity.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/ru/bitprofi/intercom/NetworkService.java" charset="UTF-8" />
   </component>
 </project>

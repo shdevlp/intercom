@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Intercom</string>
-    <string name="version">Версия 0.19</string>
+    <string name="version">Версия 0.25</string>
 
     <string name="btn_go">Поехали</string>
     <string name="btn_go_error">Ошибка</string>
@@ -17,7 +17,6 @@
     <string name="error_connection_dropped">Подключение сброшенно </string>
     <string name="error_stop_thread">Ошибка остановки потока</string>
 
-
     <string name="bt_not_supported">Ваше устройство не поддерживает Bluetooth</string>
     <string name="bt_turn_on">Bluetooth включен</string>
     <string name="bt_turn_off">Bluetooth выключен</string>
@@ -30,7 +29,7 @@
     <string name="i_am_server">Это устройство Сервер</string>
     <string name="i_am_client">Это устройство Клиент</string>
 
-    <string name="server_is_connected">Есть подключение</string>
+    <string name="server_is_connected">Сервер подключился</string>
     <string name="server_wait_connection">Сервер ждет подключения</string>
     <string name="server_closing">Выключение сервера...</string>
     <string name="server_close">Сервер выключен</string>

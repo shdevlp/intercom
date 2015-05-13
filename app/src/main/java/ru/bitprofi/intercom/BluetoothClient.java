@@ -1,9 +1,8 @@
 package ru.bitprofi.intercom;
 
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.os.*;
-import android.os.Process;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -17,10 +16,9 @@ import java.util.UUID;
  */
 public class BluetoothClient extends CommonThread {
     private BluetoothSocket _socket = null;
-    private BluetoothDevice _device = null;
-
     private DataInputStream _inStream = null;
     private DataOutputStream _outStream = null;
+    private BluetoothAdapter _ba = null;
 
     /**
      * Инициализация
@@ -28,7 +26,6 @@ public class BluetoothClient extends CommonThread {
      */
     public BluetoothClient(BluetoothDevice device) {
         super();
-        _device = device;
 
         GlobalVars.connectDeviceName = device.getName();
         GlobalVars.connectDeviceAddrs = device.getAddress();
@@ -36,8 +33,9 @@ public class BluetoothClient extends CommonThread {
         Utils.getInstance().addStatusText(GlobalVars.activity.getString(R.string.client_searching));
 
         BluetoothSocket tmp;
+        UUID uuid = UUID.fromString(GlobalVars.UUID);
         try {
-            tmp = device.createRfcommSocketToServiceRecord(UUID.fromString(GlobalVars.UUID));
+            tmp = device.createRfcommSocketToServiceRecord(uuid);
         } catch (IOException e) {
             e.printStackTrace();
             stopThread();
@@ -45,35 +43,29 @@ public class BluetoothClient extends CommonThread {
                     R.string.error_connection_dropped) + " : " + e.getMessage());
         }
         _socket = tmp;
+        _ba = BluetoothAdapter.getDefaultAdapter();
     }
 
     @Override
     public void run() {
-        android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_DEFAULT);
-
         if (_handler == null) {
             throw new RuntimeException("BluetoothClient : Handler == null");
         }
 
         try {
-            GlobalVars.bluetoothAdapter.cancelDiscovery();
+            if (_ba.isDiscovering()) {
+                _ba.cancelDiscovery();
+            }
             _socket.connect();
-
-            BluetoothDevice remoteDevice = _socket.getRemoteDevice();
-            GlobalVars.connectDeviceName  = remoteDevice.getName();
-            GlobalVars.connectDeviceAddrs = remoteDevice.getAddress();
-
-            //Есть подключение
-            final String strConnected = GlobalVars.activity.getString(
-                    R.string.server_is_connected)+":\n" +
-                    remoteDevice.getName() + "\n" + remoteDevice.getAddress();
-            Utils.getInstance().addStatusText(strConnected);
+            _isRunning = true;
         } catch (IOException e) {
             e.printStackTrace();
             stopThread();
             throw new RuntimeException(GlobalVars.activity.getString(
                     R.string.error_connection_dropped) + " : " + e.getMessage());
         }
+
+        Utils.getInstance().addInfoAboutDevice(_socket, false);
 
         InputStream tmpInput;
         OutputStream tmpOutput;
@@ -91,18 +83,18 @@ public class BluetoothClient extends CommonThread {
         _inStream = new DataInputStream(tmpInput);
         _outStream = new DataOutputStream(tmpOutput);
 
-        try {
-            int availableBytes;
-            int bytesRead;
+        int availableBytes;
+        int bytesRead;
 
-            _isRunning = true;
-            while (_isRunning) {
+        while (_isRunning)
+            try {
                 availableBytes = _inStream.available();
                 if (availableBytes > 0) {
                     byte[] buffer = new byte[availableBytes];
                     bytesRead = _inStream.read(buffer);
                     if (bytesRead > 0) {
-                        _handler.sendMessage(_handler.obtainMessage(GlobalVars.SPEAKER_MSG_DATA, buffer));
+                        _handler.sendMessage(_handler.obtainMessage(
+                                GlobalVars.SPEAKER_MSG_DATA, buffer));
                     }//if
                 }//if
 
@@ -111,13 +103,12 @@ public class BluetoothClient extends CommonThread {
                     _outStream.write(buff, 0, buff.length);
                     _vector.removeElementAt(0);
                 }
-            }//while
-        } catch (IOException e) {
-            stopThread();
-            e.printStackTrace();
-            Utils.getInstance().addStatusText(GlobalVars.activity.getString(
+            } catch (IOException e) {
+                stopThread();
+                e.printStackTrace();
+                Utils.getInstance().addStatusText(GlobalVars.activity.getString(
                     R.string.error_connection_dropped) + " : " + e.getMessage());
-        }
+            }
     }
 
     /**

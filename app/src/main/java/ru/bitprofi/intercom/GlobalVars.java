@@ -48,11 +48,11 @@ public class GlobalVars {
 
     public static final String UUID = "9e7a2220-c899-4937-8453-1048008e1538";
     public static final String BLUETOOTH_NAME = "INTERCOM";
+    public static final String BLUETOOTH_SERVER = "BT_SERVER";
+
     public static final int AUDIO_SAMPLERATE = 44100; //Дискретизация звука
 
     public static final int BUTTON_IS_ON = 1;
     public static final int BUTTON_IS_OFF = 0;
     public static int buttonState = BUTTON_IS_OFF;
-
-    public static BluetoothAdapter bluetoothAdapter = null;
 }

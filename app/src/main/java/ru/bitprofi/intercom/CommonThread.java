@@ -43,7 +43,6 @@ public class CommonThread extends Thread {
      * Остановка потока
      */
     protected void stopThread() {
-        android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_DEFAULT);
         _isRunning = false;
         Utils.getInstance().setBtnOnOff(false);
     }

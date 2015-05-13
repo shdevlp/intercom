@@ -2,9 +2,7 @@ package ru.bitprofi.intercom;
 
 import android.media.AudioFormat;
 import android.media.AudioManager;
-import android.media.AudioRecord;
 import android.media.AudioTrack;
-import android.os.*;
 import android.os.Process;
 import android.util.Log;
 

@@ -15,7 +15,8 @@
         android:layout_width="200dip"
         android:layout_height="200dip"
         android:src="@drawable/bluetooth"
-        app:cb_color="@color/yellow"
+        app:cb_color="@color/seagreen"
+        android:visibility="invisible"
         app:cb_pressedRingWidth="16dip"
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true" />

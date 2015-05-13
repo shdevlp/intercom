@@ -4,6 +4,8 @@ import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothServerSocket;
+import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -113,28 +115,6 @@ public class Utils {
         alert11.show();
     }
 
-
-    /**
-     *
-     */
-    public synchronized void stopBluetooth() {
-        BluetoothHelper bluetooth = new BluetoothHelper();
-
-        bluetooth.changeDeviceName(GlobalVars.oldDeviceName);
-        if (bluetooth.isEnabled()) {
-            bluetooth.turnOff();
-            Utils.getInstance().addStatusText(GlobalVars.context.getString(R.string.bt_turn_off));
-        }
-    }
-
-    /**
-     *
-     */
-    public synchronized void exitApplication() {
-        GlobalVars.activity.finish();
-        System.exit(0);
-    }
-
     /**
      * Установить цвет кнопки
      * @param color
@@ -174,6 +154,25 @@ public class Utils {
     }
 
     /**
+     * Видимость кнопки
+     * @param visible
+     * @return
+     */
+    public synchronized boolean setBtnVisible(final int visible) {
+        final CircleButton btn = (CircleButton)GlobalVars.activity.findViewById(R.id.btnGo);
+        if (btn != null) {
+            GlobalVars.activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    btn.setVisibility(visible);
+                }
+            });
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Ждет и показывает анимацию пока не закончится поиск устройств
      */
     public void waitScreenBTDiscovery() {
@@ -188,6 +187,29 @@ public class Utils {
                     public void run() {
                         while (true) {
                             if (GlobalVars.isBluetoothDiscoveryFinished) {
+                                dialog.dismiss();
+                                break;
+                            }
+                        }
+                    }
+                });
+                th.start();
+            }
+        });
+    }
+
+    public void waitScreenServerSocketClose(final BluetoothServerSocket serverSocket) {
+        GlobalVars.activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                final ProgressDialog dialog = ProgressDialog.show(GlobalVars.contextFragment,
+                        GlobalVars.contextFragment.getString(R.string.wait),
+                        GlobalVars.contextFragment.getString(R.string.server_closing), true);
+                Thread th = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        while (true) {
+                            if (serverSocket != null) {
                                 dialog.dismiss();
                                 break;
                             }
@@ -347,6 +369,23 @@ public class Utils {
             }
         }
     }
+
+    /**
+     * Добавить информацию о подключившемся устройстве на экран
+     * @param socket
+     */
+    public synchronized void addInfoAboutDevice(BluetoothSocket socket, boolean server) {
+        BluetoothDevice remoteDevice = socket.getRemoteDevice();
+        GlobalVars.connectDeviceName  = remoteDevice.getName();
+        GlobalVars.connectDeviceAddrs = remoteDevice.getAddress();
+
+        //Есть подключение
+        final String strConnected = GlobalVars.activity.getString(
+                (server == true) ? R.string.server_is_connected : R.string.client_is_connected)+":\n" +
+                remoteDevice.getName() + "\n" + remoteDevice.getAddress();
+        Utils.getInstance().addStatusText(strConnected);
+    }
+
 
     /**
      * Запущена ли служба
